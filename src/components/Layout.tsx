@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import airwellLogo from "./Airwell-Logo.webp";
 
 export type NavPage =
   | "dashboard" | "leads" | "pipeline" | "projects" | "followups"
@@ -154,9 +155,9 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 flex flex-col text-slate-300 overflow-y-auto" style={{ background: "#0D1550" }}>
         {/* Logo */}
-        <div className="px-4 py-3 border-b border-white/10">
+        <div className="px-4 py-3 border-b border-white/10 flex flex-col items-center text-center">
           <img
-            src="https://starairwell.com/wp-content/uploads/2026/05/Airwell-Logo.webp"
+            src={airwellLogo}
             alt="STAR Airwell"
             className="h-9 w-auto rounded"
             style={{ background: "white", padding: "4px 6px", borderRadius: 5 }}
