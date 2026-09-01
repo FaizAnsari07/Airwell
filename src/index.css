@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+}
+
+:root {
+  --background: #F0F2F8;
+  --foreground: #0D1550;
+  --card: #FFFFFF;
+  --card-foreground: #0D1550;
+  --primary: #253580;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F7FF;
+  --secondary-foreground: #2D3E80;
+  --muted: #E4E8F4;
+  --muted-foreground: #5C6B9A;
+  --accent: #E8F5E9;
+  --accent-foreground: #1E7A32;
+  --border: #DDE2F0;
+  --ring: #7B8FCC;
+  --radius: 6px;
+
+  /* Brand tokens */
+  --brand-navy: #253580;
+  --brand-navy-dark: #0D1550;
+  --brand-navy-mid: #3D50A0;
+  --brand-green: #39B849;
+  --brand-green-dark: #2A8E37;
+  --brand-green-light: #E8F7EB;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.font-mono {
+  font-family: 'DM Mono', ui-monospace, monospace;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* Kanban drag */
+.kanban-col { min-height: 200px; }
