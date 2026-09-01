@@ -149,20 +149,22 @@ const NAV_SECTIONS = [
 export default function Layout({ children, activePage, onNavigate }: LayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="flex h-full bg-slate-100 overflow-hidden">
       {/* Sidebar */}
+      {sidebarOpen && (
       <aside className="w-56 flex-shrink-0 flex flex-col text-slate-300 overflow-y-auto" style={{ background: "#0D1550" }}>
         {/* Logo */}
-        <div className="px-4 py-3 border-b border-white/10 flex flex-col items-center text-center">
+        <div className="px-4 py-4 border-b border-white/10 flex flex-col items-center text-center">
           <img
             src={airwellLogo}
             alt="STAR Airwell"
-            className="h-9 w-auto rounded"
-            style={{ background: "white", padding: "4px 6px", borderRadius: 5 }}
+            className="h-16 w-auto rounded"
+            style={{ background: "white", padding: "6px 10px", borderRadius: 6 }}
           />
-          <div className="text-[10px] mt-1.5 font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>CRM Platform</div>
+          <div className="text-[10px] mt-2 font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>CRM Platform</div>
         </div>
 
         {/* Nav */}
@@ -215,11 +217,22 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
           </div>
         </div>
       </aside>
+      )}
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header className="flex items-center h-12 bg-white border-b border-slate-200 px-5 gap-4 flex-shrink-0">
+          {/* Sidebar toggle */}
+          <button
+            onClick={() => setSidebarOpen((v) => !v)}
+            aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-500 flex-shrink-0"
+          >
+            <MenuIcon className="w-4 h-4" />
+          </button>
+
           {/* Search */}
           <div className="relative w-72">
             <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
@@ -266,6 +279,13 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
   );
 }
 
+function MenuIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
 function SearchIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
