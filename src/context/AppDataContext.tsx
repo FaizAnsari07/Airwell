@@ -192,9 +192,14 @@ export interface StatusChangeLog {
   changedBy: string;
 }
 
+export type LeadOptionField = "clientType" | "enquirySource" | "application" | "systemType" | "salesEngineer";
+
 interface AppDataContextValue {
   currentUser: User;
   setCurrentUserId: (id: string) => void;
+
+  customLeadOptions: Record<LeadOptionField, string[]>;
+  addCustomLeadOption: (field: LeadOptionField, value: string) => void;
 
   documents: LeadDocument[];
   addDocument: (doc: Omit<LeadDocument, "id">) => LeadDocument;
@@ -238,8 +243,21 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [assignments, setAssignments] = useState<ProjectAssignment[]>([]);
   const [projectUpdates, setProjectUpdates] = useState<ProjectUpdatePhoto[]>(DEMO_PROJECT_UPDATES);
   const [statusChangeLogs, setStatusChangeLogs] = useState<StatusChangeLog[]>([]);
+  const [customLeadOptions, setCustomLeadOptions] = useState<Record<LeadOptionField, string[]>>({
+    clientType: [],
+    enquirySource: [],
+    application: [],
+    systemType: [],
+    salesEngineer: [],
+  });
 
   const currentUser = USERS.find((u) => u.id === currentUserId) ?? USERS[0];
+
+  function addCustomLeadOption(field: LeadOptionField, value: string) {
+    setCustomLeadOptions((prev) =>
+      prev[field].includes(value) ? prev : { ...prev, [field]: [...prev[field], value] }
+    );
+  }
 
   function addDocument(doc: Omit<LeadDocument, "id">): LeadDocument {
     const withId = { ...doc, id: generateId("doc") };
@@ -280,6 +298,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const value: AppDataContextValue = {
     currentUser,
     setCurrentUserId,
+    customLeadOptions,
+    addCustomLeadOption,
     documents,
     addDocument,
     documentsForLead: (leadId) => documents.filter((d) => d.leadId === leadId),

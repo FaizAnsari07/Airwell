@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { leads, STATUS_CONFIG, SALES_ENGINEERS } from "../data/crmData";
 import type { Lead, LeadStatus, ClientType, EnquirySource, Application, SystemType } from "../data/crmData";
+import { useAppData } from "../context/AppDataContext";
+import CreatableSelect from "./shared/CreatableSelect";
 
 const ALL_STATUSES: LeadStatus[] = [
   "New Enquiry", "Qualified", "Site Visit", "Quotation Sent",
@@ -19,6 +21,7 @@ const CLIENT_TYPES: ClientType[] = ["Individual", "Corporate", "Builder / Develo
 const ENQUIRY_SOURCES: EnquirySource[] = ["Client", "Architect", "PMC", "TKC", "Consultant"];
 
 export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => void }) {
+  const [allLeads, setAllLeads] = useState<Lead[]>(leads);
   const [search, setSearch] = useState("");
   const [filterSE, setFilterSE] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -32,7 +35,7 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
   const [showAddModal, setShowAddModal] = useState(false);
 
   const filtered = useMemo(() => {
-    return leads
+    return allLeads
       .filter((l) => {
         if (search && !l.projectName.toLowerCase().includes(search.toLowerCase()) &&
             !l.clientName.toLowerCase().includes(search.toLowerCase())) return false;
@@ -51,7 +54,11 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
         if (av > bv) return sortDir === "asc" ? 1 : -1;
         return 0;
       });
-  }, [search, filterSE, filterStatus, filterClient, filterApp, filterLoc, filterSystem, sortCol, sortDir]);
+  }, [allLeads, search, filterSE, filterStatus, filterClient, filterApp, filterLoc, filterSystem, sortCol, sortDir]);
+
+  function handleAddLead(newLead: Lead) {
+    setAllLeads((prev) => [...prev, newLead]);
+  }
 
   function toggleSort(col: keyof Lead) {
     if (sortCol === col) setSortDir((d) => d === "asc" ? "desc" : "asc");
@@ -74,7 +81,7 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
       <div className="bg-white border-b border-slate-200 px-5 py-3 flex items-center gap-3 flex-shrink-0">
         <div>
           <h1 className="text-sm font-semibold text-slate-900">Leads & Enquiries</h1>
-          <p className="text-[11px] text-slate-400">{filtered.length} of {leads.length} leads</p>
+          <p className="text-[11px] text-slate-400">{filtered.length} of {allLeads.length} leads</p>
         </div>
         <div className="flex-1" />
 
@@ -96,6 +103,8 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
         <FilterSelect value={filterStatus} onChange={setFilterStatus} options={ALL_STATUSES} placeholder="Status" />
         <FilterSelect value={filterClient} onChange={setFilterClient} options={CLIENT_TYPES} placeholder="Client Type" />
         <FilterSelect value={filterLoc} onChange={setFilterLoc} options={LOCATIONS} placeholder="Location" />
+        <FilterSelect value={filterApp} onChange={setFilterApp} options={APPLICATIONS} placeholder="Application" />
+        <FilterSelect value={filterSystem} onChange={setFilterSystem} options={SYSTEM_TYPES} placeholder="System" />
 
         {activeFilters > 0 && (
           <button
@@ -211,7 +220,7 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
       </div>
 
       {/* Add Lead Modal */}
-      {showAddModal && <AddLeadModal onClose={() => setShowAddModal(false)} />}
+      {showAddModal && <AddLeadModal onClose={() => setShowAddModal(false)} onAdd={handleAddLead} nextSrNo={Math.max(0, ...allLeads.map((l) => l.srNo)) + 1} />}
     </div>
   );
 }
@@ -264,8 +273,73 @@ function isOverdue(dateStr: string) {
   return dateStr < new Date().toISOString().slice(0, 10);
 }
 
-function AddLeadModal({ onClose }: { onClose: () => void }) {
+function AddLeadModal({
+  onClose, onAdd, nextSrNo,
+}: {
+  onClose: () => void;
+  onAdd: (lead: Lead) => void;
+  nextSrNo: number;
+}) {
+  const { customLeadOptions, addCustomLeadOption } = useAppData();
   const [capacityUnit, setCapacityUnit] = useState<"HP" | "TR">("TR");
+  const [projectName, setProjectName] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientContact, setClientContact] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [location, setLocation] = useState("");
+  const [sourceName, setSourceName] = useState("");
+  const [salesEngineer, setSalesEngineer] = useState<string>(SALES_ENGINEERS[0] ?? "");
+  const [clientType, setClientType] = useState<string>(CLIENT_TYPES[0] ?? "");
+  const [enquirySource, setEnquirySource] = useState<string>(ENQUIRY_SOURCES[0] ?? "");
+  const [application, setApplication] = useState<string>(APPLICATIONS[0] ?? "");
+  const [systemType, setSystemType] = useState<string>(SYSTEM_TYPES[0] ?? "");
+  const [capacity, setCapacity] = useState("");
+  const [valueLakhs, setValueLakhs] = useState("");
+  const [expectedBookingDate, setExpectedBookingDate] = useState("");
+
+  const salesEngineerOptions = [...SALES_ENGINEERS, ...customLeadOptions.salesEngineer];
+  const clientTypeOptions = [...CLIENT_TYPES, ...customLeadOptions.clientType];
+  const enquirySourceOptions = [...ENQUIRY_SOURCES, ...customLeadOptions.enquirySource];
+  const applicationOptions = [...APPLICATIONS, ...customLeadOptions.application];
+  const systemTypeOptions = [...SYSTEM_TYPES, ...customLeadOptions.systemType];
+
+  const canSave = projectName.trim() !== "" && clientName.trim() !== "";
+
+  function handleSave() {
+    if (!canSave) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const lead: Lead = {
+      id: `L${Date.now()}`,
+      srNo: nextSrNo,
+      projectName: projectName.trim(),
+      salesEngineer,
+      clientType: clientType as Lead["clientType"],
+      enquirySource: enquirySource as Lead["enquirySource"],
+      sourceName: sourceName.trim(),
+      application: application as Lead["application"],
+      location: location.trim(),
+      systemType: systemType as Lead["systemType"],
+      capacity: Number(capacity) || 0,
+      capacityUnit,
+      valueLakhs: Number(valueLakhs) || 0,
+      status: "New Enquiry",
+      expectedBookingDate,
+      nextFollowUp: "",
+      leadOwner: salesEngineer,
+      probability: 10,
+      clientName: clientName.trim(),
+      clientContact: clientContact.trim(),
+      clientEmail: clientEmail.trim(),
+      remarks: "",
+      enquiryDate: today,
+      lastActivity: today,
+      activities: [
+        { id: `a${Date.now()}`, type: "Enquiry", date: today, description: "New lead created.", by: salesEngineer },
+      ],
+    };
+    onAdd(lead);
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
@@ -275,53 +349,86 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-lg leading-none">×</button>
         </div>
         <div className="p-6 grid grid-cols-2 gap-4">
-          {[
-            { label: "Project Name", type: "text", span: 2 },
-            { label: "Client Name", type: "text" },
-            { label: "Client Contact", type: "text" },
-            { label: "Client Email", type: "email" },
-            { label: "Location", type: "text" },
-            { label: "Source Name", type: "text" },
-          ].map((f) => (
-            <div key={f.label} className={f.span === 2 ? "col-span-2" : ""}>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">{f.label}</label>
-              <input type={f.type} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
-            </div>
-          ))}
+          <div className="col-span-2">
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Project Name</label>
+            <input value={projectName} onChange={(e) => setProjectName(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Client Name</label>
+            <input value={clientName} onChange={(e) => setClientName(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Client Contact</label>
+            <input value={clientContact} onChange={(e) => setClientContact(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Client Email</label>
+            <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Location</label>
+            <input value={location} onChange={(e) => setLocation(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Source Name</label>
+            <input value={sourceName} onChange={(e) => setSourceName(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Sales Engineer</label>
-            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {SALES_ENGINEERS.map(se => <option key={se}>{se}</option>)}
-            </select>
+            <CreatableSelect
+              value={salesEngineer}
+              onChange={setSalesEngineer}
+              options={salesEngineerOptions}
+              onAddOption={(v) => addCustomLeadOption("salesEngineer", v)}
+            />
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Client Type</label>
-            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {CLIENT_TYPES.map(c => <option key={c}>{c}</option>)}
-            </select>
+            <CreatableSelect
+              value={clientType}
+              onChange={setClientType}
+              options={clientTypeOptions}
+              onAddOption={(v) => addCustomLeadOption("clientType", v)}
+            />
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Enquiry Source</label>
-            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {ENQUIRY_SOURCES.map(s => <option key={s}>{s}</option>)}
-            </select>
+            <CreatableSelect
+              value={enquirySource}
+              onChange={setEnquirySource}
+              options={enquirySourceOptions}
+              onAddOption={(v) => addCustomLeadOption("enquirySource", v)}
+            />
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Application</label>
-            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {APPLICATIONS.map(a => <option key={a}>{a}</option>)}
-            </select>
+            <CreatableSelect
+              value={application}
+              onChange={setApplication}
+              options={applicationOptions}
+              onAddOption={(v) => addCustomLeadOption("application", v)}
+            />
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">System Type</label>
-            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {SYSTEM_TYPES.map(s => <option key={s}>{s}</option>)}
-            </select>
+            <CreatableSelect
+              value={systemType}
+              onChange={setSystemType}
+              options={systemTypeOptions}
+              onAddOption={(v) => addCustomLeadOption("systemType", v)}
+            />
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Capacity</label>
             <div className="flex gap-2">
-              <input type="number" className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+              <input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)}
+                className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
               <div className="flex items-center gap-2 flex-shrink-0 text-[11px] text-slate-600">
                 <label className="flex items-center gap-1">
                   <input
@@ -346,16 +453,25 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Value (₹ Lakhs)</label>
-            <input type="number" className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+            <input type="number" value={valueLakhs} onChange={(e) => setValueLakhs(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Expected Booking Date</label>
-            <input type="date" className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+            <input type="date" value={expectedBookingDate} onChange={(e) => setExpectedBookingDate(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
           </div>
         </div>
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-200">
           <button onClick={onClose} className="px-4 py-1.5 text-xs text-slate-600 border border-slate-200 rounded hover:bg-slate-50">Cancel</button>
-          <button className="px-4 py-1.5 text-xs font-semibold text-white rounded" style={{ background: "#253580" }}>Save Lead</button>
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            className="px-4 py-1.5 text-xs font-semibold text-white rounded disabled:opacity-40"
+            style={{ background: "#253580" }}
+          >
+            Save Lead
+          </button>
         </div>
       </div>
     </div>
