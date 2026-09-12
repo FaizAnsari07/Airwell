@@ -3,7 +3,7 @@ import { leads, STATUS_CONFIG, ACTIVITY_ICONS, PIPELINE_STAGES } from "../data/c
 import type { Lead, LeadStatus, Activity } from "../data/crmData";
 import { USERS } from "../data/usersData";
 import { useAppData } from "../context/AppDataContext";
-import type { ProjectUpdatePhoto } from "../context/AppDataContext";
+import type { ProjectUpdatePhoto, Payment, LeadDocument } from "../context/AppDataContext";
 import StatusChangeModal from "./shared/StatusChangeModal";
 import WonModal from "./shared/WonModal";
 import PaymentModal from "./shared/PaymentModal";
@@ -17,7 +17,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
     assignProject, assignmentForLead, projectUpdatesForLead, addProjectUpdate,
   } = useAppData();
   const [lead, setLead] = useState<Lead | undefined>(() => leads.find((l) => l.id === leadId));
-  const [activeTab, setActiveTab] = useState<"timeline" | "details" | "notes" | "updates">("timeline");
+  const [activeTab, setActiveTab] = useState<"timeline" | "details" | "notes" | "updates" | "payments">("timeline");
   const [noteText, setNoteText] = useState("");
   const [activityType, setActivityType] = useState<Activity["type"]>("Note");
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
@@ -107,18 +107,15 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
           <div className="text-slate-500 mt-0.5">{lead.clientEmail}</div>
         </div>
 
-        {/* Payment Progress — Won leads only */}
+        {/* Payment Progress — Won leads only; full ledger lives in the Payment History tab */}
         {lead.status === "Won" && (
-          <div className="p-4 border-t border-slate-100 text-xs">
+          <button
+            onClick={() => setActiveTab("payments")}
+            className="p-4 border-t border-slate-100 text-xs text-left hover:bg-slate-50"
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Payment Progress</div>
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                disabled={remaining <= 0}
-                className="text-[10px] font-semibold text-[#253580] hover:underline disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
-              >
-                + Add Installment
-              </button>
+              <span className="text-[10px] font-semibold text-[#253580]">View History →</span>
             </div>
             <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
               <div
@@ -128,43 +125,11 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
             </div>
             <div className="flex justify-between mt-1.5 text-[11px]">
               <span className="text-slate-500">Paid <span className="font-mono font-semibold text-slate-800">{formatRupees(lakhsToRupees(paidTotal))}</span></span>
-              <span className="text-slate-500">Balance <span className="font-mono font-semibold text-slate-800">{formatRupees(lakhsToRupees(remaining))}</span></span>
+              <span className="text-slate-500">
+                {remaining > 0 ? "Due" : "Balance"} <span className={`font-mono font-semibold ${remaining > 0 ? "text-red-600" : "text-slate-800"}`}>{formatRupees(lakhsToRupees(remaining))}</span>
+              </span>
             </div>
-
-            {payments.length === 0 && (
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                className="w-full mt-3 text-[11px] text-slate-400 text-center py-3 border border-dashed border-slate-200 rounded hover:bg-slate-50 hover:text-slate-500"
-              >
-                No installments recorded yet — click to record the first payment
-              </button>
-            )}
-            {payments.length > 0 && (
-              <div className="mt-3 space-y-1.5">
-                {payments.map((p) => {
-                  const doc = p.documentId ? documents.find((d) => d.id === p.documentId) : undefined;
-                  return (
-                    <div key={p.id} className="bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="flex-shrink-0">{p.method === "Cash" ? "💵" : "🏦"}</span>
-                          <span className="font-mono font-semibold text-slate-800">{formatRupees(lakhsToRupees(p.amount))}</span>
-                          <span className="text-[10px] text-slate-400">· {p.method}</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">{formatDate(p.date)}</span>
-                      </div>
-                      {(p.note || doc) && (
-                        <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-slate-500">
-                          <span className="truncate">{p.note}</span>
-                          {doc && <span className="text-blue-600 flex-shrink-0">📎 {doc.name}</span>}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          </button>
         )}
 
         {/* Quick Actions */}
@@ -236,7 +201,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
         {/* Tabs */}
         <div className="bg-white border-b border-slate-200 px-6 flex items-center gap-5 flex-shrink-0">
           {(lead.status === "Won"
-            ? (["timeline", "details", "notes", "updates"] as const)
+            ? (["timeline", "details", "notes", "updates", "payments"] as const)
             : (["timeline", "details", "notes"] as const)
           ).map((tab) => (
             <button
@@ -248,7 +213,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                   : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
             >
-              {tab === "timeline" ? "Activity Timeline" : tab === "details" ? "Full Details" : tab === "notes" ? "Notes & Tasks" : "Project Updates"}
+              {tab === "timeline" ? "Activity Timeline" : tab === "details" ? "Full Details" : tab === "notes" ? "Notes & Tasks" : tab === "updates" ? "Project Updates" : "Payment History"}
             </button>
           ))}
 
@@ -465,6 +430,17 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
               onAdd={(update) => addProjectUpdate(update)}
             />
           )}
+
+          {activeTab === "payments" && lead.status === "Won" && (
+            <PaymentHistoryTab
+              lead={lead}
+              payments={payments}
+              documents={documents}
+              paidTotal={paidTotal}
+              remaining={remaining}
+              onRecordPayment={() => setShowPaymentModal(true)}
+            />
+          )}
         </div>
       </div>
 
@@ -532,7 +508,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
           onConfirm={(newStatus) => {
             updateLead({ status: newStatus });
             setPendingStatus(null);
-            if (activeTab === "updates") setActiveTab("timeline");
+            if (activeTab === "updates" || activeTab === "payments") setActiveTab("timeline");
           }}
         />
       )}
@@ -541,8 +517,8 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
         <WonModal
           lead={lead}
           onCancel={() => setShowWonModal(false)}
-          onConfirm={(finalValueLakhs) => {
-            updateLead({ status: "Won", valueLakhs: finalValueLakhs });
+          onConfirm={(finalValueLakhs, startDate, endDate) => {
+            updateLead({ status: "Won", valueLakhs: finalValueLakhs, projectStartDate: startDate, projectEndDate: endDate });
             setShowWonModal(false);
           }}
         />
@@ -660,6 +636,107 @@ function DetailCard({ title, children }: { title: string; children: React.ReactN
     <div className="bg-white rounded-md border border-slate-200 p-4">
       <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">{title}</div>
       <div className="text-xs space-y-0">{children}</div>
+    </div>
+  );
+}
+
+function PaymentHistoryTab({
+  lead, payments, documents, paidTotal, remaining, onRecordPayment,
+}: {
+  lead: Lead;
+  payments: Payment[];
+  documents: LeadDocument[];
+  paidTotal: number;
+  remaining: number;
+  onRecordPayment: () => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const isFullyPaid = remaining <= 0;
+  const timelineEnded = !!lead.projectEndDate && lead.projectEndDate < today;
+
+  return (
+    <div className="space-y-5">
+      {/* Summary */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="bg-white rounded-md border border-slate-200 p-3">
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Project Value</div>
+          <div className="font-mono font-semibold text-sm text-slate-900">{formatRupees(lakhsToRupees(lead.valueLakhs))}</div>
+        </div>
+        <div className="bg-white rounded-md border border-slate-200 p-3">
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Paid Till Now</div>
+          <div className="font-mono font-semibold text-sm text-green-700">{formatRupees(lakhsToRupees(paidTotal))}</div>
+        </div>
+        <div className="bg-white rounded-md border border-slate-200 p-3">
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">{isFullyPaid ? "Balance" : "Amount Due"}</div>
+          <div className={`font-mono font-semibold text-sm ${isFullyPaid ? "text-slate-500" : "text-red-600"}`}>{formatRupees(lakhsToRupees(remaining))}</div>
+        </div>
+        <div className="bg-white rounded-md border border-slate-200 p-3">
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Project Timeline</div>
+          <div className="font-mono font-semibold text-[11px] text-slate-700">
+            {lead.projectStartDate ? formatDate(lead.projectStartDate) : "—"} → {lead.projectEndDate ? formatDate(lead.projectEndDate) : "—"}
+          </div>
+        </div>
+      </div>
+
+      {/* Status banner */}
+      {isFullyPaid ? (
+        <div className="bg-green-50 border border-green-200 text-green-700 rounded-md px-4 py-2.5 text-xs font-medium">
+          ✅ Fully Paid — no balance remaining on this project.
+        </div>
+      ) : timelineEnded ? (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-2.5 text-xs font-medium">
+          ⚠️ Project completed on {formatDate(lead.projectEndDate!)} but {formatRupees(lakhsToRupees(remaining))} is still due.
+        </div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-md px-4 py-2.5 text-xs font-medium">
+          🕒 Project in progress — {formatRupees(lakhsToRupees(remaining))} due{lead.projectEndDate ? ` by ${formatDate(lead.projectEndDate)}` : ""}.
+        </div>
+      )}
+
+      {/* Installment ledger */}
+      <div className="bg-white rounded-md border border-slate-200 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-semibold text-slate-700">Installment History</div>
+          <button
+            onClick={onRecordPayment}
+            disabled={isFullyPaid}
+            className="text-xs font-semibold text-white px-3 py-1.5 rounded disabled:opacity-40"
+            style={{ background: "#39B849" }}
+          >
+            + Record Payment
+          </button>
+        </div>
+
+        {payments.length === 0 && (
+          <div className="text-center text-xs text-slate-400 py-8">No installments recorded yet.</div>
+        )}
+
+        {payments.length > 0 && (
+          <div className="space-y-2">
+            {payments.map((p) => {
+              const doc = p.documentId ? documents.find((d) => d.id === p.documentId) : undefined;
+              return (
+                <div key={p.id} className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded px-3 py-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-base flex-shrink-0">{p.method === "Cash" ? "💵" : "🏦"}</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-semibold text-sm text-slate-900">{formatRupees(lakhsToRupees(p.amount))}</span>
+                        <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{p.method}</span>
+                      </div>
+                      {p.note && <div className="text-[11px] text-slate-500 truncate mt-0.5">{p.note}</div>}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-[11px] text-slate-400 font-mono">{formatDate(p.date)}</div>
+                    {doc && <div className="text-[10px] text-blue-600 mt-0.5">📎 {doc.name}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

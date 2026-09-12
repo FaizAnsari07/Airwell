@@ -53,6 +53,8 @@ export interface Lead {
   capacityUnit: "HP" | "TR";
   valueLakhs: number;
   status: LeadStatus;
+  projectStartDate?: string;
+  projectEndDate?: string;
   expectedBookingDate: string;
   nextFollowUp: string;
   leadOwner: string;
@@ -186,6 +188,8 @@ export const leads: Lead[] = [
     capacity: 500, capacityUnit: "HP",
     valueLakhs: 35.0,
     status: "Won",
+    projectStartDate: "2026-08-26",
+    projectEndDate: "2026-11-15",
     expectedBookingDate: "2026-08-25",
     nextFollowUp: "2026-09-10",
     leadOwner: "Amit Kulkarni",
@@ -244,6 +248,8 @@ export const leads: Lead[] = [
     capacity: 120, capacityUnit: "HP",
     valueLakhs: 18.5,
     status: "Won",
+    projectStartDate: "2026-08-18",
+    projectEndDate: "2026-10-20",
     expectedBookingDate: "2026-08-10",
     nextFollowUp: "2026-09-15",
     leadOwner: "Suresh Pillai",
@@ -333,6 +339,8 @@ export const leads: Lead[] = [
     capacity: 250, capacityUnit: "TR",
     valueLakhs: 65.0,
     status: "Won",
+    projectStartDate: "2026-09-01",
+    projectEndDate: "2026-12-15",
     expectedBookingDate: "2026-09-30",
     nextFollowUp: "2026-09-01",
     leadOwner: "Suresh Pillai",
@@ -420,6 +428,8 @@ export const leads: Lead[] = [
     capacity: 180, capacityUnit: "HP",
     valueLakhs: 55.0,
     status: "Won",
+    projectStartDate: "2026-07-05",
+    projectEndDate: "2026-08-05",
     expectedBookingDate: "2026-07-01",
     nextFollowUp: "2026-09-20",
     leadOwner: "Suresh Pillai",

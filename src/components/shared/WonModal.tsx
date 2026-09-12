@@ -8,7 +8,7 @@ export default function WonModal({
 }: {
   lead: Lead;
   onCancel: () => void;
-  onConfirm: (finalValueLakhs: number) => void;
+  onConfirm: (finalValueLakhs: number, startDate: string, endDate: string) => void;
 }) {
   const { addStatusChangeLog, addNotification, currentUser } = useAppData();
   const [finalValue, setFinalValue] = useState(String(lead.valueLakhs));
@@ -34,7 +34,7 @@ export default function WonModal({
         superAdmin.id
       );
     }
-    onConfirm(value);
+    onConfirm(value, startDate, endDate);
   }
 
   return (

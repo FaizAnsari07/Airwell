@@ -53,9 +53,12 @@ export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) =>
     setPendingMove(null);
   }
 
-  function applyWon(finalValueLakhs: number) {
+  function applyWon(finalValueLakhs: number, startDate: string, endDate: string) {
     if (!pendingMove) return;
-    setCards((prev) => prev.map((c) => c.id === pendingMove.leadId ? { ...c, status: "Won", valueLakhs: finalValueLakhs } : c));
+    setCards((prev) => prev.map((c) => c.id === pendingMove.leadId
+      ? { ...c, status: "Won", valueLakhs: finalValueLakhs, projectStartDate: startDate, projectEndDate: endDate }
+      : c
+    ));
     setPendingMove(null);
   }
 
