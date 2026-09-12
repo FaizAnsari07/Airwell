@@ -12,6 +12,8 @@ export default function UserManagement() {
   const [selected, setSelected] = useState<User | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [teamManager, setTeamManager] = useState<User | null>(null);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
 
   const visibleUsers = visibleUsersFor(currentUser, users);
 
@@ -31,6 +33,14 @@ export default function UserManagement() {
 
   function openAdd() { setModalMode("add"); setSelected(null); setShowModal(true); }
   function openEdit(u: User) { setModalMode("edit"); setSelected(u); setShowModal(true); }
+
+  function handleRowClick(u: User) {
+    if (u.role === "Sales Manager") {
+      setTeamManager(u);
+    } else {
+      setViewingUser(u);
+    }
+  }
 
   function toggleStatus(id: string) {
     setUsers(prev => prev.map(u => u.id === id
@@ -116,7 +126,7 @@ export default function UserManagement() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filtered.map(u => (
-              <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+              <tr key={u.id} onClick={() => handleRowClick(u)} className="hover:bg-slate-50 transition-colors cursor-pointer">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
@@ -134,13 +144,13 @@ export default function UserManagement() {
                     {u.role}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-slate-500">{u.department}</td>
+                <td className="px-4 py-3 text-slate-500">{u.role === "Super Admin" ? "—" : u.department}</td>
                 <td className="px-4 py-3">
                   <span className={`text-[11px] font-medium px-2 py-0.5 rounded ${STATUS_COLORS[u.status]}`}>
                     {u.status}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => setUsers(prev => prev.map(p => p.id === u.id ? { ...p, locationSharing: !p.locationSharing } : p))}
                     className={`w-9 h-5 rounded-full transition-colors relative ${u.locationSharing ? "bg-[#39B849]" : "bg-slate-200"}`}
@@ -150,7 +160,7 @@ export default function UserManagement() {
                 </td>
                 <td className="px-4 py-3 font-mono text-slate-400 text-[11px]">{u.lastLogin}</td>
                 <td className="px-4 py-3 font-mono text-slate-400 text-[11px]">{u.createdAt}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <button onClick={() => openEdit(u)} className="text-[11px] text-[#253580] font-medium hover:underline">Edit</button>
                     <span className="text-slate-200">|</span>
@@ -167,12 +177,135 @@ export default function UserManagement() {
       </div>
 
       {showModal && <UserModal mode={modalMode} user={selected} users={users} onClose={() => setShowModal(false)} />}
+
+      {teamManager && (
+        <TeamModal
+          manager={teamManager}
+          staff={users.filter((u) => u.managerId === teamManager.id)}
+          onClose={() => setTeamManager(null)}
+          onSelectStaff={(staffUser) => { setTeamManager(null); setViewingUser(staffUser); }}
+        />
+      )}
+
+      {viewingUser && (
+        <UserDetailModal
+          user={viewingUser}
+          manager={users.find((u) => u.id === viewingUser.managerId)}
+          onClose={() => setViewingUser(null)}
+          onEdit={() => { setViewingUser(null); openEdit(viewingUser); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function TeamModal({
+  manager, staff, onClose, onSelectStaff,
+}: {
+  manager: User;
+  staff: User[];
+  onClose: () => void;
+  onSelectStaff: (u: User) => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900">{manager.name}'s Team</h2>
+            <p className="text-[11px] text-slate-400 mt-0.5">{staff.length} staff member{staff.length === 1 ? "" : "s"}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-lg leading-none">×</button>
+        </div>
+        <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+          {staff.length === 0 && (
+            <div className="px-5 py-8 text-center text-xs text-slate-400">No staff assigned to this manager yet.</div>
+          )}
+          {staff.map((u) => (
+            <button
+              key={u.id}
+              onClick={() => onSelectStaff(u)}
+              className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-50 text-left"
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                style={{ background: u.color }}>
+                {u.initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-slate-900 truncate">{u.name}</div>
+                <div className="text-[10px] text-slate-400 truncate">{u.role} · {u.email}</div>
+              </div>
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded flex-shrink-0 ${STATUS_COLORS[u.status]}`}>{u.status}</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-end px-5 py-4 border-t border-slate-200">
+          <button onClick={onClose} className="px-4 py-1.5 text-xs text-slate-600 border border-slate-200 rounded hover:bg-slate-50">Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UserDetailModal({
+  user, manager, onClose, onEdit,
+}: {
+  user: User;
+  manager: User | undefined;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+          <h2 className="text-sm font-semibold text-slate-900">User Details</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-lg leading-none">×</button>
+        </div>
+        <div className="p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+              style={{ background: user.color }}>
+              {user.initials}
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-900">{user.name}</div>
+              <span className={`inline-block mt-0.5 text-[11px] font-medium px-2 py-0.5 rounded border ${ROLE_COLORS[user.role]}`}>{user.role}</span>
+            </div>
+          </div>
+          <div className="space-y-2 text-xs">
+            <DetailRow label="Email" value={user.email} />
+            <DetailRow label="Phone" value={user.phone} />
+            {user.role !== "Super Admin" && <DetailRow label="Department" value={user.department} />}
+            <DetailRow label="Status" value={user.status} />
+            <DetailRow label="Reports To" value={manager?.name ?? "— None —"} />
+            {user.targetAmount !== undefined && <DetailRow label="Target Amount" value={`₹${user.targetAmount}L`} />}
+            <DetailRow label="Location Sharing" value={user.locationSharing ? "Enabled" : "Disabled"} />
+            <DetailRow label="Last Login" value={user.lastLogin} />
+            <DetailRow label="Created" value={user.createdAt} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-200">
+          <button onClick={onClose} className="px-4 py-1.5 text-xs text-slate-600 border border-slate-200 rounded hover:bg-slate-50">Close</button>
+          <button onClick={onEdit} className="px-4 py-1.5 text-xs font-semibold text-white rounded" style={{ background: "#253580" }}>Edit</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-2 py-1 border-b border-slate-50 last:border-0">
+      <span className="text-slate-400">{label}</span>
+      <span className="font-medium text-slate-800 text-right">{value}</span>
     </div>
   );
 }
 
 function UserModal({ mode, user, users, onClose }: { mode: "add" | "edit"; user: User | null; users: User[]; onClose: () => void }) {
   const managers = users.filter((u) => u.role === "Sales Manager");
+  const [role, setRole] = useState<Role>(user?.role ?? "Sales Engineer");
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
@@ -195,18 +328,20 @@ function UserModal({ mode, user, users, onClose }: { mode: "add" | "edit"; user:
           ))}
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Role</label>
-            <select defaultValue={user?.role ?? "Sales Engineer"}
+            <select value={role} onChange={(e) => setRole(e.target.value as Role)}
               className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
               {["Super Admin","Sales Manager","Sales Engineer","Field Support","Viewer"].map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-[11px] font-medium text-slate-600 mb-1">Department</label>
-            <select defaultValue={user?.department ?? "Sales"}
-              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {["Management","Sales","Service","Finance","Operations"].map(d => <option key={d}>{d}</option>)}
-            </select>
-          </div>
+          {role !== "Super Admin" && (
+            <div>
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">Department</label>
+              <select defaultValue={user?.department ?? "Sales"}
+                className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
+                {["Management","Sales","Service","Finance","Operations"].map(d => <option key={d}>{d}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Reports to</label>
             <select defaultValue={user?.managerId ?? ""}

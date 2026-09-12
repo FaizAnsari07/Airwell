@@ -104,31 +104,35 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
           <div className="text-slate-500 mt-0.5">{lead.clientEmail}</div>
         </div>
 
-        {/* Payment Progress */}
-        <div className="p-4 border-t border-slate-100 text-xs">
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Payment Progress</div>
-          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#39B849]"
-              style={{ width: `${lead.valueLakhs > 0 ? Math.min((paidTotal / lead.valueLakhs) * 100, 100) : 0}%` }}
-            />
+        {/* Payment Progress — Won leads only */}
+        {lead.status === "Won" && (
+          <div className="p-4 border-t border-slate-100 text-xs">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Payment Progress</div>
+            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#39B849]"
+                style={{ width: `${lead.valueLakhs > 0 ? Math.min((paidTotal / lead.valueLakhs) * 100, 100) : 0}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-1.5 text-[11px]">
+              <span className="text-slate-500">Paid <span className="font-mono font-semibold text-slate-800">₹{paidTotal}L</span></span>
+              <span className="text-slate-500">Balance <span className="font-mono font-semibold text-slate-800">₹{remaining.toFixed(1)}L</span></span>
+            </div>
           </div>
-          <div className="flex justify-between mt-1.5 text-[11px]">
-            <span className="text-slate-500">Paid <span className="font-mono font-semibold text-slate-800">₹{paidTotal}L</span></span>
-            <span className="text-slate-500">Balance <span className="font-mono font-semibold text-slate-800">₹{remaining.toFixed(1)}L</span></span>
-          </div>
-        </div>
+        )}
 
         {/* Quick Actions */}
         <div className="p-4 border-t border-slate-100 mt-auto space-y-2">
-          <button
-            onClick={() => setShowPaymentModal(true)}
-            disabled={remaining <= 0}
-            className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-white rounded py-1.5 disabled:opacity-40"
-            style={{ background: "#39B849" }}
-          >
-            💳 Record Payment
-          </button>
+          {lead.status === "Won" && (
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              disabled={remaining <= 0}
+              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-white rounded py-1.5 disabled:opacity-40"
+              style={{ background: "#39B849" }}
+            >
+              💳 Record Payment
+            </button>
+          )}
           <button className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-white rounded py-1.5" style={{ background: "#253580" }}>
             📞 Add Call
           </button>
