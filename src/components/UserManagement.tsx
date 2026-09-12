@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { USERS, ROLE_COLORS, STATUS_COLORS, visibleUsersFor } from "../data/usersData";
+import { USERS, ROLE_COLORS, STATUS_COLORS, visibleUsersFor, departmentForRole } from "../data/usersData";
 import type { Role, UserStatus, User } from "../data/usersData";
 import { useAppData } from "../context/AppDataContext";
+
+const ALL_ROLES: Role[] = ["Super Admin", "Sales Manager", "Sales Engineer", "Site Engineer", "Field Support", "Viewer"];
 
 export default function UserManagement() {
   const { currentUser } = useAppData();
@@ -33,6 +35,13 @@ export default function UserManagement() {
 
   function openAdd() { setModalMode("add"); setSelected(null); setShowModal(true); }
   function openEdit(u: User) { setModalMode("edit"); setSelected(u); setShowModal(true); }
+
+  function handleSaveUser(saved: User) {
+    setUsers(prev => {
+      const exists = prev.some(u => u.id === saved.id);
+      return exists ? prev.map(u => (u.id === saved.id ? saved : u)) : [...prev, saved];
+    });
+  }
 
   function handleRowClick(u: User) {
     if (u.role === "Sales Manager") {
@@ -96,7 +105,7 @@ export default function UserManagement() {
         <select value={filterRole} onChange={e => setFilterRole(e.target.value as Role | "")}
           className="text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 focus:outline-none">
           <option value="">All Roles</option>
-          {(["Super Admin","Sales Manager","Sales Engineer","Site Engineer","Field Support","Viewer"] as Role[]).map(r => (
+          {ALL_ROLES.map(r => (
             <option key={r}>{r}</option>
           ))}
         </select>
@@ -176,7 +185,15 @@ export default function UserManagement() {
         </table>
       </div>
 
-      {showModal && <UserModal mode={modalMode} user={selected} users={users} onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <UserModal
+          mode={modalMode}
+          user={selected}
+          users={users}
+          onClose={() => setShowModal(false)}
+          onSave={handleSaveUser}
+        />
+      )}
 
       {teamManager && (
         <TeamModal
@@ -303,9 +320,49 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function UserModal({ mode, user, users, onClose }: { mode: "add" | "edit"; user: User | null; users: User[]; onClose: () => void }) {
-  const managers = users.filter((u) => u.role === "Sales Manager");
+function UserModal({
+  mode, user, users, onClose, onSave,
+}: {
+  mode: "add" | "edit";
+  user: User | null;
+  users: User[];
+  onClose: () => void;
+  onSave: (user: User) => void;
+}) {
+  const managers = users.filter((u) => u.role === "Sales Manager" && u.id !== user?.id);
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
   const [role, setRole] = useState<Role>(user?.role ?? "Sales Engineer");
+  const [managerId, setManagerId] = useState(user?.managerId ?? "");
+  const [targetAmount, setTargetAmount] = useState(user?.targetAmount !== undefined ? String(user.targetAmount) : "");
+  const [locationSharing, setLocationSharing] = useState(user?.locationSharing ?? false);
+
+  const department = role === "Super Admin" ? "" : departmentForRole(role);
+  const canSave = name.trim() !== "" && email.trim() !== "";
+
+  function handleSave() {
+    if (!canSave) return;
+    const initials = name.trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "??";
+    const saved: User = {
+      id: user?.id ?? `U${Date.now()}`,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      role,
+      department: departmentForRole(role),
+      status: user?.status ?? "Invited",
+      lastLogin: user?.lastLogin ?? "Never",
+      createdAt: user?.createdAt ?? new Date().toISOString().slice(0, 10),
+      locationSharing,
+      initials: user?.initials ?? initials,
+      color: user?.color ?? "#253580",
+      managerId: role === "Super Admin" ? undefined : (managerId || undefined),
+      targetAmount: targetAmount ? Number(targetAmount) : undefined,
+    };
+    onSave(saved);
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
@@ -315,59 +372,85 @@ function UserModal({ mode, user, users, onClose }: { mode: "add" | "edit"; user:
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 text-lg leading-none">×</button>
         </div>
         <div className="p-5 grid grid-cols-2 gap-4">
-          {[
-            { label: "Full Name", type: "text", defaultValue: user?.name ?? "", span: 2 },
-            { label: "Email Address", type: "email", defaultValue: user?.email ?? "" },
-            { label: "Phone", type: "tel", defaultValue: user?.phone ?? "" },
-          ].map(f => (
-            <div key={f.label} className={f.span === 2 ? "col-span-2" : ""}>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">{f.label}</label>
-              <input type={f.type} defaultValue={f.defaultValue}
-                className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
-            </div>
-          ))}
+          <div className="col-span-2">
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Full Name</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Email Address</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Phone</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+          </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value as Role)}
-              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {["Super Admin","Sales Manager","Sales Engineer","Site Engineer","Field Support","Viewer"].map(r => <option key={r}>{r}</option>)}
+            <select
+              value={role}
+              onChange={(e) => {
+                const nextRole = e.target.value as Role;
+                setRole(nextRole);
+                if (nextRole === "Super Admin") setManagerId("");
+              }}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400"
+            >
+              {ALL_ROLES.map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
           {role !== "Super Admin" && (
             <div>
               <label className="block text-[11px] font-medium text-slate-600 mb-1">Department</label>
-              <select defaultValue={user?.department ?? "Sales"}
+              <input
+                type="text"
+                value={department}
+                readOnly
+                disabled
+                title="Department is set automatically from the selected Role"
+                className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs bg-slate-50 text-slate-500 cursor-not-allowed"
+              />
+            </div>
+          )}
+          {role !== "Super Admin" && (
+            <div>
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">Reports to</label>
+              <select value={managerId} onChange={(e) => setManagerId(e.target.value)}
                 className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-                {["Management","Sales","Service","Finance","Operations"].map(d => <option key={d}>{d}</option>)}
+                <option value="">— None —</option>
+                {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             </div>
           )}
           <div>
-            <label className="block text-[11px] font-medium text-slate-600 mb-1">Reports to</label>
-            <select defaultValue={user?.managerId ?? ""}
-              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              <option value="">— None —</option>
-              {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          </div>
-          <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Target Amount (₹ Lakhs)</label>
-            <input type="number" defaultValue={user?.targetAmount ?? ""}
+            <input type="number" value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)}
               className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
           </div>
-          <div className="col-span-2 flex items-center gap-3 p-3 bg-slate-50 rounded border border-slate-200">
+          <button
+            type="button"
+            onClick={() => setLocationSharing((v) => !v)}
+            className="col-span-2 flex items-center gap-3 p-3 bg-slate-50 rounded border border-slate-200 text-left"
+          >
             <div className="flex-1">
               <div className="text-xs font-medium text-slate-700">Location Sharing</div>
               <div className="text-[10px] text-slate-400 mt-0.5">Allow this user's location to be visible to managers</div>
             </div>
-            <div className={`w-9 h-5 rounded-full cursor-pointer relative ${user?.locationSharing ? "bg-[#39B849]" : "bg-slate-200"}`}>
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${user?.locationSharing ? "translate-x-4" : "translate-x-0.5"}`} />
+            <div className={`w-9 h-5 rounded-full relative flex-shrink-0 ${locationSharing ? "bg-[#39B849]" : "bg-slate-200"}`}>
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${locationSharing ? "translate-x-4" : "translate-x-0.5"}`} />
             </div>
-          </div>
+          </button>
         </div>
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-200">
           <button onClick={onClose} className="px-4 py-1.5 text-xs text-slate-600 border border-slate-200 rounded hover:bg-slate-50">Cancel</button>
-          <button className="px-4 py-1.5 text-xs font-semibold text-white rounded" style={{ background: "#253580" }}>
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            className="px-4 py-1.5 text-xs font-semibold text-white rounded disabled:opacity-40"
+            style={{ background: "#253580" }}
+          >
             {mode === "add" ? "Send Invite" : "Save Changes"}
           </button>
         </div>
