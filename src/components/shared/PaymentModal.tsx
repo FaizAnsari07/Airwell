@@ -2,12 +2,7 @@ import { useState } from "react";
 import type { Lead } from "../../data/crmData";
 import { useAppData } from "../../context/AppDataContext";
 import FileUploadButton from "./FileUploadButton";
-
-const RUPEES_PER_LAKH = 100_000;
-
-function formatRupees(rupees: number) {
-  return `₹${Math.round(rupees).toLocaleString("en-IN")}`;
-}
+import { RUPEES_PER_LAKH, formatRupees } from "../../utils/formatCurrency";
 
 export default function PaymentModal({
   lead, alreadyPaid, onClose,

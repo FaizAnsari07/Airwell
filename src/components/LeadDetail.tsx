@@ -9,10 +9,11 @@ import WonModal from "./shared/WonModal";
 import PaymentModal from "./shared/PaymentModal";
 import FileUploadButton from "./shared/FileUploadButton";
 import { formatDate } from "../utils/formatDate";
+import { formatRupees, lakhsToRupees } from "../utils/formatCurrency";
 
 export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack: () => void }) {
   const {
-    currentUser, paidTotalForLead, documentsForLead, addNotification,
+    currentUser, paidTotalForLead, paymentsForLead, documentsForLead, addNotification,
     assignProject, assignmentForLead, projectUpdatesForLead, addProjectUpdate,
   } = useAppData();
   const [lead, setLead] = useState<Lead | undefined>(() => leads.find((l) => l.id === leadId));
@@ -37,6 +38,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
   const stageIdx = PIPELINE_STAGES.indexOf(lead.status);
   const paidTotal = paidTotalForLead(lead.id);
   const remaining = Math.max(lead.valueLakhs - paidTotal, 0);
+  const payments = paymentsForLead(lead.id);
   const documents = documentsForLead(lead.id);
   const assignment = assignmentForLead(lead.id);
   const updates = projectUpdatesForLead(lead.id);
@@ -108,7 +110,16 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
         {/* Payment Progress — Won leads only */}
         {lead.status === "Won" && (
           <div className="p-4 border-t border-slate-100 text-xs">
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Payment Progress</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Payment Progress</div>
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                disabled={remaining <= 0}
+                className="text-[10px] font-semibold text-[#253580] hover:underline disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
+              >
+                + Add Installment
+              </button>
+            </div>
             <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#39B849]"
@@ -116,9 +127,43 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
               />
             </div>
             <div className="flex justify-between mt-1.5 text-[11px]">
-              <span className="text-slate-500">Paid <span className="font-mono font-semibold text-slate-800">₹{paidTotal}L</span></span>
-              <span className="text-slate-500">Balance <span className="font-mono font-semibold text-slate-800">₹{remaining.toFixed(1)}L</span></span>
+              <span className="text-slate-500">Paid <span className="font-mono font-semibold text-slate-800">{formatRupees(lakhsToRupees(paidTotal))}</span></span>
+              <span className="text-slate-500">Balance <span className="font-mono font-semibold text-slate-800">{formatRupees(lakhsToRupees(remaining))}</span></span>
             </div>
+
+            {payments.length === 0 && (
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="w-full mt-3 text-[11px] text-slate-400 text-center py-3 border border-dashed border-slate-200 rounded hover:bg-slate-50 hover:text-slate-500"
+              >
+                No installments recorded yet — click to record the first payment
+              </button>
+            )}
+            {payments.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {payments.map((p) => {
+                  const doc = p.documentId ? documents.find((d) => d.id === p.documentId) : undefined;
+                  return (
+                    <div key={p.id} className="bg-slate-50 border border-slate-200 rounded px-2.5 py-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="flex-shrink-0">{p.method === "Cash" ? "💵" : "🏦"}</span>
+                          <span className="font-mono font-semibold text-slate-800">{formatRupees(lakhsToRupees(p.amount))}</span>
+                          <span className="text-[10px] text-slate-400">· {p.method}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">{formatDate(p.date)}</span>
+                      </div>
+                      {(p.note || doc) && (
+                        <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-slate-500">
+                          <span className="truncate">{p.note}</span>
+                          {doc && <span className="text-blue-600 flex-shrink-0">📎 {doc.name}</span>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
