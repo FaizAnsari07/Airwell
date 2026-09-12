@@ -7,6 +7,7 @@ import type { ProjectUpdatePhoto } from "../context/AppDataContext";
 import StatusChangeModal from "./shared/StatusChangeModal";
 import WonModal from "./shared/WonModal";
 import PaymentModal from "./shared/PaymentModal";
+import FileUploadButton from "./shared/FileUploadButton";
 
 export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack: () => void }) {
   const {
@@ -639,12 +640,9 @@ function ProjectUpdatesTab({
             onChange={(e) => setDate(e.target.value)}
             className="text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-blue-400"
           />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="col-span-2 text-xs text-slate-500"
-          />
+          <div className="col-span-2">
+            <FileUploadButton file={file} onChange={setFile} label="Upload Site Photo" accept="image/*" />
+          </div>
         </div>
         <input
           value={caption}

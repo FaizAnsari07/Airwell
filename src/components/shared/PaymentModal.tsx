@@ -1,6 +1,13 @@
 import { useState } from "react";
 import type { Lead } from "../../data/crmData";
 import { useAppData } from "../../context/AppDataContext";
+import FileUploadButton from "./FileUploadButton";
+
+const RUPEES_PER_LAKH = 100_000;
+
+function formatRupees(rupees: number) {
+  return `₹${Math.round(rupees).toLocaleString("en-IN")}`;
+}
 
 export default function PaymentModal({
   lead, alreadyPaid, onClose,
@@ -10,14 +17,16 @@ export default function PaymentModal({
   onClose: () => void;
 }) {
   const { addDocument, addPayment, currentUser } = useAppData();
-  const [amount, setAmount] = useState("");
+  const [amountRupees, setAmountRupees] = useState("");
   const [method, setMethod] = useState<"Cash" | "Bank Transfer">("Cash");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
-  const remaining = Math.max(lead.valueLakhs - alreadyPaid, 0);
-  const amountNum = Number(amount) || 0;
-  const canConfirm = amountNum > 0 && amountNum <= remaining && (method === "Cash" || file !== null);
+  const remainingLakhs = Math.max(lead.valueLakhs - alreadyPaid, 0);
+  const remainingRupees = remainingLakhs * RUPEES_PER_LAKH;
+  const amountNumRupees = Number(amountRupees) || 0;
+  const amountLakhs = amountNumRupees / RUPEES_PER_LAKH;
+  const canConfirm = amountNumRupees > 0 && amountLakhs <= remainingLakhs && (method === "Cash" || file !== null);
 
   function handleConfirm() {
     let documentId: string | undefined;
@@ -33,7 +42,7 @@ export default function PaymentModal({
     }
     addPayment({
       leadId: lead.id,
-      amount: amountNum,
+      amount: amountLakhs,
       method,
       note,
       date: new Date().toISOString().slice(0, 10),
@@ -48,21 +57,26 @@ export default function PaymentModal({
         <div className="px-5 py-4 border-b border-slate-200">
           <h3 className="text-sm font-semibold text-slate-900">Record Payment</h3>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            {lead.projectName} · Paid ₹{alreadyPaid}L of ₹{lead.valueLakhs}L · Remaining ₹{remaining.toFixed(1)}L
+            {lead.projectName} · Paid {formatRupees(alreadyPaid * RUPEES_PER_LAKH)} of {formatRupees(lead.valueLakhs * RUPEES_PER_LAKH)}
+            {" "}· Remaining {formatRupees(remainingRupees)}
           </p>
         </div>
         <div className="p-5 space-y-3">
           <div>
-            <label className="block text-[11px] font-medium text-slate-600 mb-1">Amount (₹ Lakhs)</label>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Amount (₹)</label>
             <input
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              max={remaining}
+              value={amountRupees}
+              onChange={(e) => setAmountRupees(e.target.value)}
+              placeholder="e.g. 100000"
+              max={remainingRupees}
               className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400"
             />
-            {amountNum > remaining && (
-              <div className="text-[11px] text-red-500 mt-1">Cannot exceed remaining balance (₹{remaining.toFixed(1)}L).</div>
+            {amountNumRupees > 0 && amountLakhs <= remainingLakhs && (
+              <div className="text-[11px] text-slate-500 mt-1">= ₹{amountLakhs.toFixed(2)} Lakhs</div>
+            )}
+            {amountLakhs > remainingLakhs && (
+              <div className="text-[11px] text-red-500 mt-1">Cannot exceed remaining balance ({formatRupees(remainingRupees)}).</div>
             )}
           </div>
           <div>
@@ -81,16 +95,7 @@ export default function PaymentModal({
           {method === "Bank Transfer" && (
             <div>
               <label className="block text-[11px] font-medium text-slate-600 mb-1">Transfer Receipt (required)</label>
-              <input
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="w-full text-xs text-slate-500"
-              />
-              {file && (
-                <div className="text-[11px] text-slate-500 mt-1">
-                  Will be saved as: <span className="font-medium">{file.name}</span>
-                </div>
-              )}
+              <FileUploadButton file={file} onChange={setFile} label="Attach Transfer Receipt" />
             </div>
           )}
           <div>

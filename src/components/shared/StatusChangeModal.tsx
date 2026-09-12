@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Lead, LeadStatus } from "../../data/crmData";
 import { useAppData } from "../../context/AppDataContext";
+import FileUploadButton from "./FileUploadButton";
 
 export default function StatusChangeModal({
   lead, targetStatus, onCancel, onConfirm,
@@ -59,16 +60,7 @@ export default function StatusChangeModal({
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Attach Document (optional)</label>
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="w-full text-xs text-slate-500"
-            />
-            {file && (
-              <div className="text-[11px] text-slate-500 mt-1">
-                Will be saved as: <span className="font-medium">{file.name}</span>
-              </div>
-            )}
+            <FileUploadButton file={file} onChange={setFile} label="Attach Document" />
           </div>
         </div>
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-200">
