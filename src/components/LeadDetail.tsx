@@ -1,17 +1,44 @@
 import { useState } from "react";
 import { leads, STATUS_CONFIG, ACTIVITY_ICONS, PIPELINE_STAGES } from "../data/crmData";
-import type { LeadStatus } from "../data/crmData";
+import type { Lead, LeadStatus, Activity } from "../data/crmData";
+import { USERS } from "../data/usersData";
+import { useAppData } from "../context/AppDataContext";
+import type { ProjectUpdatePhoto } from "../context/AppDataContext";
+import StatusChangeModal from "./shared/StatusChangeModal";
+import WonModal from "./shared/WonModal";
+import PaymentModal from "./shared/PaymentModal";
 
 export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack: () => void }) {
-  const lead = leads.find((l) => l.id === leadId);
-  const [activeTab, setActiveTab] = useState<"timeline" | "details" | "notes">("timeline");
+  const {
+    currentUser, paidTotalForLead, documentsForLead, addNotification,
+    assignProject, assignmentForLead, projectUpdatesForLead, addProjectUpdate,
+  } = useAppData();
+  const [lead, setLead] = useState<Lead | undefined>(() => leads.find((l) => l.id === leadId));
+  const [activeTab, setActiveTab] = useState<"timeline" | "details" | "notes" | "updates">("timeline");
   const [noteText, setNoteText] = useState("");
+  const [activityType, setActivityType] = useState<Activity["type"]>("Note");
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpDate, setFollowUpDate] = useState("");
+  const [followUpType, setFollowUpType] = useState("Call");
+  const [followUpNote, setFollowUpNote] = useState("");
+  const [pendingStatus, setPendingStatus] = useState<LeadStatus | null>(null);
+  const [showWonModal, setShowWonModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   if (!lead) return <div className="p-6 text-slate-500">Lead not found</div>;
 
+  function updateLead(patch: Partial<Lead>) {
+    setLead((prev) => (prev ? { ...prev, ...patch } : prev));
+  }
+
   const cfg = STATUS_CONFIG[lead.status];
   const stageIdx = PIPELINE_STAGES.indexOf(lead.status);
+  const paidTotal = paidTotalForLead(lead.id);
+  const remaining = Math.max(lead.valueLakhs - paidTotal, 0);
+  const documents = documentsForLead(lead.id);
+  const assignment = assignmentForLead(lead.id);
+  const updates = projectUpdatesForLead(lead.id);
+  const managers = USERS.filter((u) => u.role === "Sales Manager");
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -76,8 +103,31 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
           <div className="text-slate-500 mt-0.5">{lead.clientEmail}</div>
         </div>
 
+        {/* Payment Progress */}
+        <div className="p-4 border-t border-slate-100 text-xs">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Payment Progress</div>
+          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#39B849]"
+              style={{ width: `${lead.valueLakhs > 0 ? Math.min((paidTotal / lead.valueLakhs) * 100, 100) : 0}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-1.5 text-[11px]">
+            <span className="text-slate-500">Paid <span className="font-mono font-semibold text-slate-800">₹{paidTotal}L</span></span>
+            <span className="text-slate-500">Balance <span className="font-mono font-semibold text-slate-800">₹{remaining.toFixed(1)}L</span></span>
+          </div>
+        </div>
+
         {/* Quick Actions */}
         <div className="p-4 border-t border-slate-100 mt-auto space-y-2">
+          <button
+            onClick={() => setShowPaymentModal(true)}
+            disabled={remaining <= 0}
+            className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-white rounded py-1.5 disabled:opacity-40"
+            style={{ background: "#39B849" }}
+          >
+            💳 Record Payment
+          </button>
           <button className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-white rounded py-1.5" style={{ background: "#253580" }}>
             📞 Add Call
           </button>
@@ -134,7 +184,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
 
         {/* Tabs */}
         <div className="bg-white border-b border-slate-200 px-6 flex items-center gap-5 flex-shrink-0">
-          {(["timeline", "details", "notes"] as const).map((tab) => (
+          {(["timeline", "details", "notes", "updates"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -144,14 +194,29 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                   : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
             >
-              {tab === "timeline" ? "Activity Timeline" : tab === "details" ? "Full Details" : "Notes & Tasks"}
+              {tab === "timeline" ? "Activity Timeline" : tab === "details" ? "Full Details" : tab === "notes" ? "Notes & Tasks" : "Project Updates"}
             </button>
           ))}
 
           <div className="ml-auto flex items-center gap-2 pb-1">
-            <select className="text-xs border border-slate-200 rounded px-2 py-1 bg-slate-50 focus:outline-none">
-              <option>Change Status</option>
-              {PIPELINE_STAGES.map(s => <option key={s}>{s}</option>)}
+            {lead.status !== "Won" && (
+              <button
+                onClick={() => setShowWonModal(true)}
+                className="text-xs font-semibold text-white px-3 py-1 rounded"
+                style={{ background: "#39B849" }}
+              >
+                🏆 Mark as Won
+              </button>
+            )}
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) setPendingStatus(e.target.value as LeadStatus);
+              }}
+              className="text-xs border border-slate-200 rounded px-2 py-1 bg-slate-50 focus:outline-none"
+            >
+              <option value="">Change Status</option>
+              {PIPELINE_STAGES.filter((s) => s !== "Won" && s !== lead.status).map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
@@ -173,12 +238,35 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex gap-1.5">
                     {(["Call", "Site Visit", "Note", "Quotation", "Follow-up"] as const).map((type) => (
-                      <button key={type} className="text-[11px] px-2 py-1 border border-slate-200 rounded text-slate-600 hover:bg-slate-50">
+                      <button
+                        key={type}
+                        onClick={() => setActivityType(type)}
+                        className={`text-[11px] px-2 py-1 border rounded hover:bg-slate-50 ${
+                          activityType === type ? "border-[#253580] text-[#253580] bg-[#eef0f9]" : "border-slate-200 text-slate-600"
+                        }`}
+                      >
                         {ACTIVITY_ICONS[type]} {type}
                       </button>
                     ))}
                   </div>
-                  <button className="ml-auto text-xs font-semibold text-white px-3 py-1.5 rounded" style={{ background: "#253580" }}>
+                  <button
+                    onClick={() => {
+                      if (!noteText.trim()) return;
+                      const activity: Activity = {
+                        id: `n${Date.now()}`,
+                        type: activityType,
+                        date: new Date().toISOString().slice(0, 10),
+                        description: noteText,
+                        by: currentUser.name,
+                      };
+                      updateLead({ activities: [...lead.activities, activity], lastActivity: activity.date });
+                      addNotification(`New ${activityType.toLowerCase()} logged on ${lead.projectName}: ${noteText}`);
+                      setNoteText("");
+                    }}
+                    disabled={!noteText.trim()}
+                    className="ml-auto text-xs font-semibold text-white px-3 py-1.5 rounded disabled:opacity-40"
+                    style={{ background: "#253580" }}
+                  >
                     Log Activity
                   </button>
                 </div>
@@ -246,6 +334,38 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                   <p className="text-xs text-slate-600 leading-relaxed">{lead.remarks}</p>
                 </div>
               )}
+
+              <div className="col-span-2 bg-white rounded-md border border-slate-200 p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Documents</div>
+                {documents.length === 0 && <p className="text-xs text-slate-400">No documents attached yet.</p>}
+                {documents.length > 0 && (
+                  <div className="space-y-1.5">
+                    {documents.map((d) => (
+                      <div key={d.id} className="flex items-center justify-between text-xs border-b border-slate-50 last:border-0 py-1.5">
+                        <div className="flex items-center gap-2">
+                          <span>📎</span>
+                          <span className="font-medium text-slate-700">{d.name}</span>
+                          <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{d.category}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-mono">{d.uploadedAt} · {d.uploadedBy}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {lead.status === "Won" && (
+                <AssignmentPanel
+                  managers={managers}
+                  assignment={assignment}
+                  currentUserRole={currentUser.role}
+                  onAssign={(managerId, staffId) => {
+                    assignProject(lead.id, managerId, staffId);
+                    addNotification(`You've been assigned to ${lead.projectName}`, managerId);
+                    if (staffId) addNotification(`You've been assigned to ${lead.projectName}`, staffId);
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -282,6 +402,15 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
               </div>
             </div>
           )}
+
+          {activeTab === "updates" && (
+            <ProjectUpdatesTab
+              leadId={lead.id}
+              updates={updates}
+              engineerName={currentUser.name}
+              onAdd={(update) => addProjectUpdate(update)}
+            />
+          )}
         </div>
       </div>
 
@@ -292,24 +421,147 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] font-medium text-slate-600 mb-1">Date</label>
-                <input type="date" className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+                <input
+                  type="date"
+                  value={followUpDate}
+                  onChange={(e) => setFollowUpDate(e.target.value)}
+                  className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400"
+                />
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-600 mb-1">Type</label>
-                <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
+                <select
+                  value={followUpType}
+                  onChange={(e) => setFollowUpType(e.target.value)}
+                  className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400"
+                >
                   <option>Call</option><option>Meeting</option><option>Site Visit</option><option>Email</option>
                 </select>
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-slate-600 mb-1">Note</label>
-                <textarea rows={2} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400 resize-none" />
+                <textarea
+                  value={followUpNote}
+                  onChange={(e) => setFollowUpNote(e.target.value)}
+                  rows={2}
+                  className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400 resize-none"
+                />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setShowFollowUpModal(false)} className="flex-1 text-xs text-slate-600 border border-slate-200 rounded py-1.5 hover:bg-slate-50">Cancel</button>
-              <button className="flex-1 text-xs font-semibold text-white rounded py-1.5" style={{ background: "#253580" }}>Save</button>
+              <button
+                onClick={() => {
+                  if (!followUpDate) return;
+                  updateLead({ nextFollowUp: followUpDate });
+                  addNotification(`Follow-up (${followUpType}) scheduled on ${lead.projectName} for ${followUpDate}${followUpNote ? ": " + followUpNote : ""}`);
+                  setShowFollowUpModal(false);
+                  setFollowUpDate("");
+                  setFollowUpNote("");
+                }}
+                disabled={!followUpDate}
+                className="flex-1 text-xs font-semibold text-white rounded py-1.5 disabled:opacity-40"
+                style={{ background: "#253580" }}
+              >
+                Save
+              </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {pendingStatus && (
+        <StatusChangeModal
+          lead={lead}
+          targetStatus={pendingStatus}
+          onCancel={() => setPendingStatus(null)}
+          onConfirm={(newStatus) => {
+            updateLead({ status: newStatus });
+            setPendingStatus(null);
+          }}
+        />
+      )}
+
+      {showWonModal && (
+        <WonModal
+          lead={lead}
+          onCancel={() => setShowWonModal(false)}
+          onConfirm={(finalValueLakhs) => {
+            updateLead({ status: "Won", valueLakhs: finalValueLakhs });
+            setShowWonModal(false);
+          }}
+        />
+      )}
+
+      {showPaymentModal && (
+        <PaymentModal
+          lead={lead}
+          alreadyPaid={paidTotal}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function AssignmentPanel({
+  managers, assignment, currentUserRole, onAssign,
+}: {
+  managers: { id: string; name: string }[];
+  assignment: { managerId: string; staffId?: string } | undefined;
+  currentUserRole: string;
+  onAssign: (managerId: string, staffId?: string) => void;
+}) {
+  const [selectedManager, setSelectedManager] = useState(assignment?.managerId ?? "");
+  const [selectedStaff, setSelectedStaff] = useState(assignment?.staffId ?? "");
+  const staffOptions = USERS.filter((u) => u.managerId === selectedManager);
+
+  if (currentUserRole !== "Super Admin" && !assignment) return null;
+
+  return (
+    <div className="col-span-2 bg-white rounded-md border border-slate-200 p-4">
+      <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Project Assignment</div>
+      {assignment && (
+        <div className="text-xs text-slate-600 mb-3">
+          Assigned to <span className="font-medium">{USERS.find((u) => u.id === assignment.managerId)?.name ?? "—"}</span>
+          {assignment.staffId && (
+            <> → <span className="font-medium">{USERS.find((u) => u.id === assignment.staffId)?.name ?? "—"}</span></>
+          )}
+        </div>
+      )}
+      {currentUserRole === "Super Admin" && (
+        <div className="grid grid-cols-2 gap-3 items-end">
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Manager</label>
+            <select
+              value={selectedManager}
+              onChange={(e) => { setSelectedManager(e.target.value); setSelectedStaff(""); }}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400"
+            >
+              <option value="">Select manager…</option>
+              {managers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Staff / Engineer</label>
+            <select
+              value={selectedStaff}
+              onChange={(e) => setSelectedStaff(e.target.value)}
+              disabled={!selectedManager}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400 disabled:opacity-40"
+            >
+              <option value="">Select staff…</option>
+              {staffOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <button
+            onClick={() => onAssign(selectedManager, selectedStaff || undefined)}
+            disabled={!selectedManager}
+            className="col-span-2 text-xs font-semibold text-white rounded py-1.5 disabled:opacity-40"
+            style={{ background: "#253580" }}
+          >
+            {assignment ? "Update Assignment" : "Assign Project"}
+          </button>
         </div>
       )}
     </div>
@@ -339,6 +591,98 @@ function DetailCard({ title, children }: { title: string; children: React.ReactN
     <div className="bg-white rounded-md border border-slate-200 p-4">
       <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">{title}</div>
       <div className="text-xs space-y-0">{children}</div>
+    </div>
+  );
+}
+
+function ProjectUpdatesTab({
+  leadId, updates, engineerName, onAdd,
+}: {
+  leadId: string;
+  updates: ProjectUpdatePhoto[];
+  engineerName: string;
+  onAdd: (update: Omit<ProjectUpdatePhoto, "id">) => void;
+}) {
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [file, setFile] = useState<File | null>(null);
+  const [caption, setCaption] = useState("");
+
+  const byDate = new Map<string, ProjectUpdatePhoto[]>();
+  for (const u of updates) {
+    if (!byDate.has(u.date)) byDate.set(u.date, []);
+    byDate.get(u.date)!.push(u);
+  }
+  const sortedDates = [...byDate.keys()].sort((a, b) => (a < b ? 1 : -1));
+
+  function handleAdd() {
+    if (!file) return;
+    onAdd({
+      leadId,
+      imageName: file.name,
+      previewUrl: URL.createObjectURL(file),
+      date,
+      engineerName,
+      caption: caption || undefined,
+    });
+    setFile(null);
+    setCaption("");
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-md border border-slate-200 p-4">
+        <div className="text-xs font-medium text-slate-700 mb-2">Add Site Update</div>
+        <div className="grid grid-cols-3 gap-2">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-blue-400"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="col-span-2 text-xs text-slate-500"
+          />
+        </div>
+        <input
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+          placeholder="Caption (optional)"
+          className="w-full mt-2 text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-blue-400"
+        />
+        <button
+          onClick={handleAdd}
+          disabled={!file}
+          className="mt-2 text-xs font-semibold text-white px-3 py-1.5 rounded disabled:opacity-40"
+          style={{ background: "#253580" }}
+        >
+          Add Update
+        </button>
+      </div>
+
+      {sortedDates.length === 0 && (
+        <div className="text-center text-xs text-slate-400 py-10">No site updates logged yet.</div>
+      )}
+
+      {sortedDates.map((d) => (
+        <div key={d}>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2 font-mono">{d}</div>
+          <div className="grid grid-cols-4 gap-3">
+            {byDate.get(d)!.map((u) => (
+              <div key={u.id} className="bg-white rounded-md border border-slate-200 overflow-hidden">
+                <img src={u.previewUrl} alt={u.imageName} className="w-full h-24 object-cover" />
+                <div className="p-2">
+                  <div className="text-[10px] font-medium text-slate-700 truncate">{u.imageName}</div>
+                  <div className="text-[10px] text-slate-400">{u.engineerName}</div>
+                  {u.caption && <div className="text-[10px] text-slate-500 mt-0.5">{u.caption}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
