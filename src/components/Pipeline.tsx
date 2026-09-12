@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { leads as initialLeads, STATUS_CONFIG, PIPELINE_STAGES } from "../data/crmData";
 import type { Lead, LeadStatus } from "../data/crmData";
+import StatusChangeModal from "./shared/StatusChangeModal";
+import WonModal from "./shared/WonModal";
+import { USERS, visibleUsersFor } from "../data/usersData";
+import { useAppData } from "../context/AppDataContext";
 
 const STAGE_COLORS: Record<LeadStatus, string> = {
   "New Enquiry":       "border-t-slate-400",
@@ -16,9 +20,16 @@ const STAGE_COLORS: Record<LeadStatus, string> = {
 };
 
 export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) => void }) {
+  const { currentUser } = useAppData();
   const [cards, setCards] = useState<Lead[]>(initialLeads);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<LeadStatus | null>(null);
+  const [pendingMove, setPendingMove] = useState<{ leadId: string; targetStatus: LeadStatus } | null>(null);
+  const [filterEmployee, setFilterEmployee] = useState("");
+
+  const employeeOptions = visibleUsersFor(currentUser, USERS).filter(
+    (u) => u.role === "Sales Engineer" || u.role === "Field Support"
+  );
 
   function handleDragStart(id: string) {
     setDragging(id);
@@ -26,13 +37,33 @@ export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) =>
 
   function handleDrop(status: LeadStatus) {
     if (!dragging) return;
-    setCards((prev) => prev.map((c) => c.id === dragging ? { ...c, status } : c));
+    const leadId = dragging;
     setDragging(null);
     setDragOver(null);
+    if (status === cards.find((c) => c.id === leadId)?.status) return;
+    setPendingMove({ leadId, targetStatus: status });
   }
 
-  const totalValue = cards.filter(c => c.status !== "Lost").reduce((s, c) => s + c.valueLakhs, 0);
-  const wonValue = cards.filter(c => c.status === "Won").reduce((s, c) => s + c.valueLakhs, 0);
+  const pendingLead = pendingMove ? cards.find((c) => c.id === pendingMove.leadId) : undefined;
+
+  function applyStatusChange(newStatus: LeadStatus) {
+    if (!pendingMove) return;
+    setCards((prev) => prev.map((c) => c.id === pendingMove.leadId ? { ...c, status: newStatus } : c));
+    setPendingMove(null);
+  }
+
+  function applyWon(finalValueLakhs: number) {
+    if (!pendingMove) return;
+    setCards((prev) => prev.map((c) => c.id === pendingMove.leadId ? { ...c, status: "Won", valueLakhs: finalValueLakhs } : c));
+    setPendingMove(null);
+  }
+
+  const visibleNames = new Set(employeeOptions.map((u) => u.name));
+  const scopedCards = currentUser.role === "Super Admin" ? cards : cards.filter((c) => visibleNames.has(c.salesEngineer));
+  const displayCards = filterEmployee ? scopedCards.filter((c) => c.salesEngineer === filterEmployee) : scopedCards;
+
+  const totalValue = displayCards.filter(c => c.status !== "Lost").reduce((s, c) => s + c.valueLakhs, 0);
+  const wonValue = displayCards.filter(c => c.status === "Won").reduce((s, c) => s + c.valueLakhs, 0);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -43,6 +74,16 @@ export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) =>
           <p className="text-[11px] text-slate-400">Kanban view · Drag cards to move stages</p>
         </div>
         <div className="flex-1" />
+        <select
+          value={filterEmployee}
+          onChange={(e) => setFilterEmployee(e.target.value)}
+          className="text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 text-slate-600 focus:outline-none max-w-[180px]"
+        >
+          <option value="">All Employees</option>
+          {employeeOptions.map((u) => (
+            <option key={u.id} value={u.name}>{u.name} — {u.status}</option>
+          ))}
+        </select>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5 text-slate-500">
             <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -53,7 +94,7 @@ export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) =>
             Won YTD: <span className="font-mono font-semibold text-slate-900 ml-1">₹{wonValue.toFixed(1)}L</span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-500">
-            Total Leads: <span className="font-mono font-semibold text-slate-900 ml-1">{cards.length}</span>
+            Total Leads: <span className="font-mono font-semibold text-slate-900 ml-1">{displayCards.length}</span>
           </div>
         </div>
       </div>
@@ -62,7 +103,7 @@ export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) =>
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
         <div className="flex gap-3 p-4 h-full" style={{ minWidth: `${PIPELINE_STAGES.length * 230}px` }}>
           {PIPELINE_STAGES.map((stage) => {
-            const stageCards = cards.filter((c) => c.status === stage);
+            const stageCards = displayCards.filter((c) => c.status === stage);
             const stageValue = stageCards.reduce((s, c) => s + c.valueLakhs, 0);
             const cfg = STATUS_CONFIG[stage];
             const isDragTarget = dragOver === stage;
@@ -114,6 +155,22 @@ export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) =>
           })}
         </div>
       </div>
+
+      {pendingMove && pendingLead && pendingMove.targetStatus !== "Won" && (
+        <StatusChangeModal
+          lead={pendingLead}
+          targetStatus={pendingMove.targetStatus}
+          onCancel={() => setPendingMove(null)}
+          onConfirm={applyStatusChange}
+        />
+      )}
+      {pendingMove && pendingLead && pendingMove.targetStatus === "Won" && (
+        <WonModal
+          lead={pendingLead}
+          onCancel={() => setPendingMove(null)}
+          onConfirm={applyWon}
+        />
+      )}
     </div>
   );
 }
