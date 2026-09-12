@@ -47,7 +47,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
           <InfoCell label="Value" value={`₹${lead.valueLakhs}L`} mono />
           <InfoCell label="Probability" value={`${lead.probability}%`} mono />
           <InfoCell label="System" value={lead.systemType} />
-          <InfoCell label="Capacity" value={lead.hp > 0 ? `${lead.hp}HP` : `${lead.tr}TR`} mono />
+          <InfoCell label="Capacity" value={`${lead.capacity}${lead.capacityUnit}`} mono />
         </div>
 
         {/* Details */}
@@ -216,7 +216,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                 <DetailRow label="Project Name" value={lead.projectName} />
                 <DetailRow label="Application" value={lead.application} />
                 <DetailRow label="System Type" value={lead.systemType} />
-                <DetailRow label="Capacity" value={lead.hp > 0 ? `${lead.hp} HP` : `${lead.tr} TR`} mono />
+                <DetailRow label="Capacity" value={`${lead.capacity} ${lead.capacityUnit}`} mono />
                 <DetailRow label="Estimated Value" value={`₹${lead.valueLakhs} Lakhs`} mono />
                 <DetailRow label="Location" value={lead.location} />
               </DetailCard>

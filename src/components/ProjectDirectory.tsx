@@ -83,7 +83,7 @@ export default function ProjectDirectory({ onLeadClick }: { onLeadClick: (id: st
                 <td className="px-4 py-3 text-slate-600">{p.salesEngineer}</td>
                 <td className="px-4 py-3 text-slate-500">{p.application}</td>
                 <td className="px-4 py-3 text-slate-500">{p.systemType}</td>
-                <td className="px-4 py-3 font-mono text-slate-600">{p.hp > 0 ? `${p.hp}HP` : `${p.tr}TR`}</td>
+                <td className="px-4 py-3 font-mono text-slate-600">{p.capacity}{p.capacityUnit}</td>
                 <td className="px-4 py-3 font-mono font-semibold text-slate-900">₹{p.valueLakhs}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ${STATUS_CONFIG[p.status].bg} ${STATUS_CONFIG[p.status].color}`}>

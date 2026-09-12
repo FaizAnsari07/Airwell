@@ -287,7 +287,7 @@ function BookingData({ monthLabel }: { monthLabel: string }) {
                 <td className="px-4 py-3 text-slate-600">{l.clientName}</td>
                 <td className="px-4 py-3 text-slate-600">{l.salesEngineer}</td>
                 <td className="px-4 py-3 text-slate-500">{l.systemType}</td>
-                <td className="px-4 py-3 font-mono text-slate-600">{l.hp > 0 ? `${l.hp}HP` : `${l.tr}TR`}</td>
+                <td className="px-4 py-3 font-mono text-slate-600">{l.capacity}{l.capacityUnit}</td>
                 <td className="px-4 py-3 font-mono font-semibold text-slate-900">₹{l.valueLakhs}</td>
                 <td className="px-4 py-3">
                   <span className={`text-[11px] font-medium px-2 py-0.5 rounded ${

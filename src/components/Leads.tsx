@@ -175,7 +175,7 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
                 <td className="px-3 py-2 text-slate-500">{l.location}</td>
                 <td className="px-3 py-2 text-slate-500">{l.systemType}</td>
                 <td className="px-3 py-2 text-right font-mono text-slate-600">
-                  {l.hp > 0 ? `${l.hp}HP` : `${l.tr}TR`}
+                  {l.capacity}{l.capacityUnit}
                 </td>
                 <td className="px-3 py-2 text-right font-mono font-semibold text-slate-900">₹{l.valueLakhs}</td>
                 <td className="px-3 py-2">

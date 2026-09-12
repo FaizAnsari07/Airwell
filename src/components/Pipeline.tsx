@@ -153,7 +153,7 @@ function KanbanCard({
             <span>🏢</span> <span className="truncate">{card.clientName}</span>
           </div>
           <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-            <span>❄️</span> {card.systemType} · {card.hp > 0 ? `${card.hp}HP` : `${card.tr}TR`}
+            <span>❄️</span> {card.systemType} · {card.capacity}{card.capacityUnit}
           </div>
         </div>
 
