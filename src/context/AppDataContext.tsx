@@ -1,12 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { USERS, type User } from "../data/usersData";
 
-function placeholderPhoto(label: string, color: string): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320">
-    <rect width="100%" height="100%" fill="${color}"/>
-    <text x="50%" y="50%" font-family="system-ui, sans-serif" font-size="22" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${label}</text>
-  </svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+function stockPhoto(seed: string): string {
+  return `https://picsum.photos/seed/${seed}/600/400`;
 }
 
 export interface LeadDocument {
@@ -59,7 +55,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-1",
     leadId: "L011",
     imageName: "site-mobilization.jpg",
-    previewUrl: placeholderPhoto("Site Mobilization", "#253580"),
+    previewUrl: stockPhoto("site-mobilization"),
     date: "2026-07-06",
     engineerName: "Kavya Sharma",
     caption: "Material delivered on site, cleanroom access secured. Team mobilized.",
@@ -68,7 +64,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-2",
     leadId: "L011",
     imageName: "ductwork-layout-marking.jpg",
-    previewUrl: placeholderPhoto("Ductwork Layout Marking", "#3D50A0"),
+    previewUrl: stockPhoto("ductwork-layout-marking"),
     date: "2026-07-09",
     engineerName: "Kavya Sharma",
     caption: "Layout marked for AHU ducting as per approved drawing.",
@@ -77,7 +73,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-3",
     leadId: "L011",
     imageName: "ahu-unit-positioning.jpg",
-    previewUrl: placeholderPhoto("AHU Unit Positioning", "#7C3AED"),
+    previewUrl: stockPhoto("ahu-unit-positioning"),
     date: "2026-07-12",
     engineerName: "Nikhil Patil",
     caption: "AHU unit lifted and positioned on the mounting frame.",
@@ -86,7 +82,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-4",
     leadId: "L011",
     imageName: "ductwork-install-section-a.jpg",
-    previewUrl: placeholderPhoto("Ductwork Install — Section A", "#0891B2"),
+    previewUrl: stockPhoto("ductwork-install-section-a"),
     date: "2026-07-15",
     engineerName: "Kavya Sharma",
     caption: "Section A ducting installed and insulated.",
@@ -95,7 +91,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-5",
     leadId: "L011",
     imageName: "ductwork-install-section-b.jpg",
-    previewUrl: placeholderPhoto("Ductwork Install — Section B", "#0E7490"),
+    previewUrl: stockPhoto("ductwork-install-section-b"),
     date: "2026-07-15",
     engineerName: "Kavya Sharma",
     caption: "Section B ducting installed same day, ahead of schedule.",
@@ -104,7 +100,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-6",
     leadId: "L011",
     imageName: "electrical-control-panel.jpg",
-    previewUrl: placeholderPhoto("Electrical & Control Panel", "#D97706"),
+    previewUrl: stockPhoto("electrical-control-panel"),
     date: "2026-07-18",
     engineerName: "Nikhil Patil",
     caption: "Control panel wiring completed, ready for power-on.",
@@ -113,7 +109,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-7",
     leadId: "L011",
     imageName: "system-testing-commissioning.jpg",
-    previewUrl: placeholderPhoto("Testing & Commissioning", "#39B849"),
+    previewUrl: stockPhoto("testing-commissioning"),
     date: "2026-07-22",
     engineerName: "Kavya Sharma",
     caption: "System powered on. Airflow and temperature readings within spec.",
