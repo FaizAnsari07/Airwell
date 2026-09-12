@@ -1,17 +1,74 @@
+import { useState } from "react";
 import { salesEngineers } from "../data/crmData";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
+const MONTH_YEAR: Record<string, number> = {
+  Apr: 2026, May: 2026, Jun: 2026, Jul: 2026, Aug: 2026, Sep: 2026,
+  Oct: 2026, Nov: 2026, Dec: 2026, Jan: 2027, Feb: 2027, Mar: 2027,
+};
+const MONTH_NUM: Record<string, number> = {
+  Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12, Jan: 1, Feb: 2, Mar: 3,
+};
+
+function monthToDate(month: string): Date {
+  return new Date(MONTH_YEAR[month], MONTH_NUM[month] - 1, 1);
+}
+
+function csvCell(value: string): string {
+  if (/[",\r\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+  return value;
+}
+
+function exportToExcel(fromDate: string, toDate: string) {
+  const from = new Date(fromDate);
+  const to = new Date(toDate);
+  const rows: string[][] = [["Sales Engineer", "Month", "Target (Lakhs)", "Achieved (Lakhs)"]];
+
+  for (const se of salesEngineers) {
+    for (const m of se.monthlyData) {
+      const d = monthToDate(m.month);
+      if (d < from || d > to) continue;
+      rows.push([se.name, `${m.month} ${MONTH_YEAR[m.month]}`, String(m.target), String(m.achieved)]);
+    }
+  }
+
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `sales-performance_${fromDate}_to_${toDate}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function SalesPerformance() {
-  const ranked = [...salesEngineers].sort((a, b) => {
-    const pctA = a.achieved / a.target;
-    const pctB = b.achieved / b.target;
+  const [fromDate, setFromDate] = useState("2026-04-01");
+  const [toDate, setToDate] = useState("2026-09-30");
+
+  const from = new Date(fromDate);
+  const to = new Date(toDate);
+
+  const rangedEngineers = salesEngineers.map((se) => {
+    const monthlyData = se.monthlyData.filter((m) => {
+      const d = monthToDate(m.month);
+      return d >= from && d <= to;
+    });
+    const target = monthlyData.reduce((s, m) => s + m.target, 0);
+    const achieved = monthlyData.reduce((s, m) => s + m.achieved, 0);
+    return { ...se, monthlyData, target, achieved };
+  });
+
+  const ranked = [...rangedEngineers].sort((a, b) => {
+    const pctA = a.target > 0 ? a.achieved / a.target : 0;
+    const pctB = b.target > 0 ? b.achieved / b.target : 0;
     return pctB - pctA;
   });
 
-  const comparisonData = salesEngineers.map(se => ({
+  const comparisonData = rangedEngineers.map(se => ({
     name: se.name.split(" ")[0],
     Target: se.target,
     Achieved: se.achieved,
@@ -29,10 +86,42 @@ export default function SalesPerformance() {
         </div>
       </div>
 
+      {/* Custom Date Range + Export */}
+      <div className="bg-white rounded-md border border-slate-200 p-4 flex items-end gap-3 flex-wrap">
+        <div>
+          <label className="block text-[11px] font-medium text-slate-600 mb-1">From Date</label>
+          <input
+            type="date"
+            value={fromDate}
+            max={toDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-blue-400"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-medium text-slate-600 mb-1">To Date</label>
+          <input
+            type="date"
+            value={toDate}
+            min={fromDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-blue-400"
+          />
+        </div>
+        <button
+          onClick={() => exportToExcel(fromDate, toDate)}
+          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1.5 rounded"
+          style={{ background: "#39B849" }}
+        >
+          📊 Export to Excel
+        </button>
+        <span className="text-[11px] text-slate-400 ml-auto">Report reflects data between the selected dates</span>
+      </div>
+
       {/* Rankings */}
       <div className="grid grid-cols-5 gap-3">
         {ranked.map((se, i) => {
-          const pct = Math.round((se.achieved / se.target) * 100);
+          const pct = se.target > 0 ? Math.round((se.achieved / se.target) * 100) : 0;
           const pctColor = pct >= 80 ? "text-green-600" : pct >= 60 ? "text-amber-600" : "text-red-600";
           const ringColor = pct >= 80 ? "border-green-400" : pct >= 60 ? "border-amber-400" : "border-red-300";
 
@@ -91,7 +180,7 @@ export default function SalesPerformance() {
 
       {/* Monthly Trend per SE */}
       <div className="grid grid-cols-5 gap-3">
-        {salesEngineers.map((se) => (
+        {rangedEngineers.map((se) => (
           <div key={se.name} className="bg-white rounded-md border border-slate-200 p-4">
             <div className="text-[11px] font-semibold text-slate-700 mb-3">{se.name.split(" ")[0]}</div>
             <ResponsiveContainer width="100%" height={80}>
@@ -107,7 +196,7 @@ export default function SalesPerformance() {
               </LineChart>
             </ResponsiveContainer>
             <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-              <span>Apr</span><span>Sep</span>
+              <span>{se.monthlyData[0]?.month ?? "—"}</span><span>{se.monthlyData[se.monthlyData.length - 1]?.month ?? "—"}</span>
             </div>
           </div>
         ))}
