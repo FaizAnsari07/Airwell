@@ -604,6 +604,11 @@ function DetailCard({ title, children }: { title: string; children: React.ReactN
   );
 }
 
+function formatDDMMYYYY(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  return `${day}-${month}-${year}`;
+}
+
 function ProjectUpdatesTab({
   leadId, updates, engineerName, onAdd,
 }: {
@@ -622,7 +627,9 @@ function ProjectUpdatesTab({
     if (!byDate.has(u.date)) byDate.set(u.date, []);
     byDate.get(u.date)!.push(u);
   }
-  const sortedDates = [...byDate.keys()].sort((a, b) => (a < b ? -1 : 1));
+  const datesOldestFirst = [...byDate.keys()].sort((a, b) => (a < b ? -1 : 1));
+  const dayNumberByDate = new Map(datesOldestFirst.map((d, i) => [d, i + 1]));
+  const sortedDates = [...datesOldestFirst].reverse();
 
   function handleAdd() {
     if (!file) return;
@@ -678,16 +685,16 @@ function ProjectUpdatesTab({
         <div className="relative">
           <div className="absolute left-[21px] top-2 bottom-2 w-px bg-slate-200" />
           <div className="space-y-6">
-            {sortedDates.map((d, i) => {
+            {sortedDates.map((d) => {
               const dayUpdates = byDate.get(d)!;
               return (
                 <div key={d} className="flex gap-4 relative">
                   <div className="w-11 h-11 rounded-full bg-white border-2 border-[#253580] flex items-center justify-center text-[10px] font-bold text-[#253580] flex-shrink-0 z-10">
-                    Day {i + 1}
+                    Day {dayNumberByDate.get(d)}
                   </div>
                   <div className="flex-1 min-w-0 pb-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-semibold text-slate-800 font-mono">{d}</span>
+                      <span className="text-xs font-semibold text-slate-800 font-mono">{formatDDMMYYYY(d)}</span>
                       <span className="text-[10px] text-slate-400">· {dayUpdates.length} photo{dayUpdates.length === 1 ? "" : "s"}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
