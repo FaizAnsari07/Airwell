@@ -21,6 +21,7 @@ export default function PaymentModal({
   const [method, setMethod] = useState<"Cash" | "Bank Transfer">("Cash");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [attachmentName, setAttachmentName] = useState("");
 
   const remainingLakhs = Math.max(lead.valueLakhs - alreadyPaid, 0);
   const remainingRupees = remainingLakhs * RUPEES_PER_LAKH;
@@ -33,7 +34,7 @@ export default function PaymentModal({
     if (file) {
       const doc = addDocument({
         leadId: lead.id,
-        name: file.name,
+        name: attachmentName.trim() || file.name,
         category: "Payment Receipt",
         uploadedAt: new Date().toISOString().slice(0, 10),
         uploadedBy: currentUser.name,
@@ -95,7 +96,7 @@ export default function PaymentModal({
           {method === "Bank Transfer" && (
             <div>
               <label className="block text-[11px] font-medium text-slate-600 mb-1">Transfer Receipt (required)</label>
-              <FileUploadButton file={file} onChange={setFile} label="Attach Transfer Receipt" />
+              <FileUploadButton file={file} onChange={setFile} name={attachmentName} onNameChange={setAttachmentName} label="Attach Transfer Receipt" />
             </div>
           )}
           <div>

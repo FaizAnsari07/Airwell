@@ -606,6 +606,7 @@ function ProjectUpdatesTab({
 }) {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [file, setFile] = useState<File | null>(null);
+  const [attachmentName, setAttachmentName] = useState("");
   const [caption, setCaption] = useState("");
 
   const byDate = new Map<string, ProjectUpdatePhoto[]>();
@@ -619,13 +620,14 @@ function ProjectUpdatesTab({
     if (!file) return;
     onAdd({
       leadId,
-      imageName: file.name,
+      imageName: attachmentName.trim() || file.name,
       previewUrl: URL.createObjectURL(file),
       date,
       engineerName,
       caption: caption || undefined,
     });
     setFile(null);
+    setAttachmentName("");
     setCaption("");
   }
 
@@ -641,7 +643,7 @@ function ProjectUpdatesTab({
             className="text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-blue-400"
           />
           <div className="col-span-2">
-            <FileUploadButton file={file} onChange={setFile} label="Upload Site Photo" accept="image/*" />
+            <FileUploadButton file={file} onChange={setFile} name={attachmentName} onNameChange={setAttachmentName} label="Upload Site Photo" accept="image/*" />
           </div>
         </div>
         <input

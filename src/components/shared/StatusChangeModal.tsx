@@ -14,13 +14,14 @@ export default function StatusChangeModal({
   const { addDocument, addStatusChangeLog, addNotification, currentUser } = useAppData();
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [attachmentName, setAttachmentName] = useState("");
 
   function handleConfirm() {
     let documentId: string | undefined;
     if (file) {
       const doc = addDocument({
         leadId: lead.id,
-        name: file.name,
+        name: attachmentName.trim() || file.name,
         category: "Stage Change",
         uploadedAt: new Date().toISOString().slice(0, 10),
         uploadedBy: currentUser.name,
@@ -60,7 +61,7 @@ export default function StatusChangeModal({
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Attach Document (optional)</label>
-            <FileUploadButton file={file} onChange={setFile} label="Attach Document" />
+            <FileUploadButton file={file} onChange={setFile} name={attachmentName} onNameChange={setAttachmentName} label="Attach Document" />
           </div>
         </div>
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-200">
