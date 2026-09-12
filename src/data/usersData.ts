@@ -1,4 +1,4 @@
-export type Role = "Super Admin" | "Sales Manager" | "Sales Engineer" | "Field Support" | "Viewer";
+export type Role = "Super Admin" | "Sales Manager" | "Sales Engineer" | "Site Engineer" | "Field Support" | "Viewer";
 export type UserStatus = "Active" | "Inactive" | "Suspended" | "Invited";
 
 export interface User {
@@ -26,8 +26,8 @@ export const USERS: User[] = [
   { id: "U005", name: "Amit Kulkarni", email: "amit.kulkarni@starairwell.com", phone: "+91 76543 21098", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-30 17:22", createdAt: "2024-05-15", locationSharing: true, initials: "AK", color: "#7C3AED", managerId: "U002", targetAmount: 160 },
   { id: "U006", name: "Suresh Pillai", email: "suresh.pillai@starairwell.com", phone: "+91 65432 10987", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 09:00", createdAt: "2024-05-15", locationSharing: true, initials: "SP", color: "#D97706", managerId: "U002", targetAmount: 160 },
   { id: "U007", name: "Deepak Verma", email: "deepak.verma@starairwell.com", phone: "+91 54321 09876", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 07:55", createdAt: "2024-06-01", locationSharing: true, initials: "DV", color: "#DC2626", managerId: "U002", targetAmount: 150 },
-  { id: "U008", name: "Kavya Sharma", email: "kavya.sharma@starairwell.com", phone: "+91 43210 98765", role: "Field Support", department: "Service", status: "Active", lastLogin: "2026-08-31 07:30", createdAt: "2024-07-01", locationSharing: true, initials: "KS", color: "#0891B2", managerId: "U002" },
-  { id: "U009", name: "Nikhil Patil", email: "nikhil.patil@starairwell.com", phone: "+91 32109 87654", role: "Field Support", department: "Service", status: "Inactive", lastLogin: "2026-08-25 16:00", createdAt: "2024-07-15", locationSharing: false, initials: "NP", color: "#64748B", managerId: "U002" },
+  { id: "U008", name: "Kavya Sharma", email: "kavya.sharma@starairwell.com", phone: "+91 43210 98765", role: "Site Engineer", department: "Service", status: "Active", lastLogin: "2026-08-31 07:30", createdAt: "2024-07-01", locationSharing: true, initials: "KS", color: "#0891B2", managerId: "U002" },
+  { id: "U009", name: "Nikhil Patil", email: "nikhil.patil@starairwell.com", phone: "+91 32109 87654", role: "Site Engineer", department: "Service", status: "Inactive", lastLogin: "2026-08-25 16:00", createdAt: "2024-07-15", locationSharing: false, initials: "NP", color: "#64748B", managerId: "U002" },
   { id: "U010", name: "Meera Joshi", email: "meera.joshi@starairwell.com", phone: "+91 21098 76543", role: "Viewer", department: "Finance", status: "Invited", lastLogin: "Never", createdAt: "2026-08-28", locationSharing: false, initials: "MJ", color: "#9333EA" },
 ];
 
@@ -35,6 +35,7 @@ export const ROLE_COLORS: Record<Role, string> = {
   "Super Admin":    "bg-red-50 text-red-700 border-red-200",
   "Sales Manager":  "bg-[#eef0f9] text-[#253580] border-[#c5cbea]",
   "Sales Engineer": "bg-blue-50 text-blue-700 border-blue-200",
+  "Site Engineer":  "bg-teal-50 text-teal-700 border-teal-200",
   "Field Support":  "bg-cyan-50 text-cyan-700 border-cyan-200",
   "Viewer":         "bg-slate-100 text-slate-600 border-slate-200",
 };

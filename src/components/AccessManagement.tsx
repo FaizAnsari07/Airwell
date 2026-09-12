@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-type Role = "Super Admin" | "Sales Manager" | "Sales Engineer" | "Field Support" | "Viewer";
+type Role = "Super Admin" | "Sales Manager" | "Sales Engineer" | "Site Engineer" | "Field Support" | "Viewer";
 
 interface Permission {
   module: string;
@@ -43,6 +43,19 @@ const DEFAULT_PERMS: Record<Role, Partial<Record<string, { view: boolean; create
     projects:     { view: true,  create: false, edit: false, delete: false, export: false },
     followups:    { view: true,  create: true,  edit: true,  delete: false, export: false },
     monthly_review: { view: true,  create: false, edit: false, delete: false, export: false },
+    sales_perf:   { view: false, create: false, edit: false, delete: false, export: false },
+    emp_tracking: { view: false, create: false, edit: false, delete: false, export: false },
+    user_mgmt:    { view: false, create: false, edit: false, delete: false, export: false },
+    access_mgmt:  { view: false, create: false, edit: false, delete: false, export: false },
+    reports:      { view: false, create: false, edit: false, delete: false, export: false },
+  },
+  "Site Engineer": {
+    dashboard:    { view: true,  create: false, edit: false, delete: false, export: false },
+    leads:        { view: false, create: false, edit: false, delete: false, export: false },
+    pipeline:     { view: true,  create: false, edit: false, delete: false, export: false },
+    projects:     { view: true,  create: false, edit: true,  delete: false, export: false },
+    followups:    { view: false, create: false, edit: false, delete: false, export: false },
+    monthly_review: { view: false, create: false, edit: false, delete: false, export: false },
     sales_perf:   { view: false, create: false, edit: false, delete: false, export: false },
     emp_tracking: { view: false, create: false, edit: false, delete: false, export: false },
     user_mgmt:    { view: false, create: false, edit: false, delete: false, export: false },
@@ -93,12 +106,13 @@ function getDefault(role: Role, key: string, action: Action): boolean {
   return false;
 }
 
-const ROLES: Role[] = ["Super Admin", "Sales Manager", "Sales Engineer", "Field Support", "Viewer"];
+const ROLES: Role[] = ["Super Admin", "Sales Manager", "Sales Engineer", "Site Engineer", "Field Support", "Viewer"];
 
 const ROLE_COLORS: Record<Role, string> = {
   "Super Admin":    "bg-red-50 text-red-700 border-red-200",
   "Sales Manager":  "bg-[#eef0f9] text-[#253580] border-[#c5cbea]",
   "Sales Engineer": "bg-blue-50 text-blue-700 border-blue-200",
+  "Site Engineer":  "bg-teal-50 text-teal-700 border-teal-200",
   "Field Support":  "bg-cyan-50 text-cyan-700 border-cyan-200",
   "Viewer":         "bg-slate-100 text-slate-600 border-slate-200",
 };
@@ -107,6 +121,7 @@ const ROLE_DESCRIPTIONS: Record<Role, string> = {
   "Super Admin":    "Full system access. Can manage users, roles, and all data.",
   "Sales Manager":  "Manages sales team, views all reports, manages leads and pipeline.",
   "Sales Engineer": "Manages own leads and follow-ups. Limited reporting access.",
+  "Site Engineer":  "Views assigned Won projects and pipeline. Posts daily site/project updates.",
   "Field Support":  "Views leads and projects. Manages own follow-ups and visits.",
   "Viewer":         "Read-only access to dashboard, leads, pipeline, and reports.",
 };

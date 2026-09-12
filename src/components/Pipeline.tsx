@@ -28,7 +28,7 @@ export default function Pipeline({ onLeadClick }: { onLeadClick: (id: string) =>
   const [filterEmployee, setFilterEmployee] = useState("");
 
   const employeeOptions = visibleUsersFor(currentUser, USERS).filter(
-    (u) => u.role === "Sales Engineer" || u.role === "Field Support"
+    (u) => u.role === "Sales Engineer" || u.role === "Site Engineer" || u.role === "Field Support"
   );
 
   function handleDragStart(id: string) {

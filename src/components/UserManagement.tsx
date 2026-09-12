@@ -96,7 +96,7 @@ export default function UserManagement() {
         <select value={filterRole} onChange={e => setFilterRole(e.target.value as Role | "")}
           className="text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 focus:outline-none">
           <option value="">All Roles</option>
-          {(["Super Admin","Sales Manager","Sales Engineer","Field Support","Viewer"] as Role[]).map(r => (
+          {(["Super Admin","Sales Manager","Sales Engineer","Site Engineer","Field Support","Viewer"] as Role[]).map(r => (
             <option key={r}>{r}</option>
           ))}
         </select>
@@ -330,7 +330,7 @@ function UserModal({ mode, user, users, onClose }: { mode: "add" | "edit"; user:
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Role</label>
             <select value={role} onChange={(e) => setRole(e.target.value as Role)}
               className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {["Super Admin","Sales Manager","Sales Engineer","Field Support","Viewer"].map(r => <option key={r}>{r}</option>)}
+              {["Super Admin","Sales Manager","Sales Engineer","Site Engineer","Field Support","Viewer"].map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
           {role !== "Super Admin" && (
