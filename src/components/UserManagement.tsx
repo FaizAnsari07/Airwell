@@ -16,18 +16,20 @@ interface User {
   locationSharing: boolean;
   initials: string;
   color: string;
+  managerId?: string;
+  targetAmount?: number;
 }
 
 const USERS: User[] = [
   { id: "U001", name: "Sunil Mehta", email: "sunil.mehta@starairwell.com", phone: "+91 98765 00001", role: "Super Admin", department: "Management", status: "Active", lastLogin: "2026-08-31 09:12", createdAt: "2024-01-15", locationSharing: false, initials: "SM", color: "#253580" },
-  { id: "U002", name: "Anita Rao", email: "anita.rao@starairwell.com", phone: "+91 98765 00002", role: "Sales Manager", department: "Sales", status: "Active", lastLogin: "2026-08-31 08:45", createdAt: "2024-03-10", locationSharing: false, initials: "AR", color: "#3D50A0" },
-  { id: "U003", name: "Rajan Mehta", email: "rajan.mehta@starairwell.com", phone: "+91 98765 43210", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 08:50", createdAt: "2024-04-01", locationSharing: true, initials: "RM", color: "#253580" },
-  { id: "U004", name: "Priya Desai", email: "priya.desai@starairwell.com", phone: "+91 87654 32109", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 08:30", createdAt: "2024-04-01", locationSharing: true, initials: "PD", color: "#39B849" },
-  { id: "U005", name: "Amit Kulkarni", email: "amit.kulkarni@starairwell.com", phone: "+91 76543 21098", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-30 17:22", createdAt: "2024-05-15", locationSharing: true, initials: "AK", color: "#7C3AED" },
-  { id: "U006", name: "Suresh Pillai", email: "suresh.pillai@starairwell.com", phone: "+91 65432 10987", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 09:00", createdAt: "2024-05-15", locationSharing: true, initials: "SP", color: "#D97706" },
-  { id: "U007", name: "Deepak Verma", email: "deepak.verma@starairwell.com", phone: "+91 54321 09876", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 07:55", createdAt: "2024-06-01", locationSharing: true, initials: "DV", color: "#DC2626" },
-  { id: "U008", name: "Kavya Sharma", email: "kavya.sharma@starairwell.com", phone: "+91 43210 98765", role: "Field Support", department: "Service", status: "Active", lastLogin: "2026-08-31 07:30", createdAt: "2024-07-01", locationSharing: true, initials: "KS", color: "#0891B2" },
-  { id: "U009", name: "Nikhil Patil", email: "nikhil.patil@starairwell.com", phone: "+91 32109 87654", role: "Field Support", department: "Service", status: "Inactive", lastLogin: "2026-08-25 16:00", createdAt: "2024-07-15", locationSharing: false, initials: "NP", color: "#64748B" },
+  { id: "U002", name: "Anita Rao", email: "anita.rao@starairwell.com", phone: "+91 98765 00002", role: "Sales Manager", department: "Sales", status: "Active", lastLogin: "2026-08-31 08:45", createdAt: "2024-03-10", locationSharing: false, initials: "AR", color: "#3D50A0", targetAmount: 500 },
+  { id: "U003", name: "Rajan Mehta", email: "rajan.mehta@starairwell.com", phone: "+91 98765 43210", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 08:50", createdAt: "2024-04-01", locationSharing: true, initials: "RM", color: "#253580", managerId: "U002", targetAmount: 180 },
+  { id: "U004", name: "Priya Desai", email: "priya.desai@starairwell.com", phone: "+91 87654 32109", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 08:30", createdAt: "2024-04-01", locationSharing: true, initials: "PD", color: "#39B849", managerId: "U002", targetAmount: 180 },
+  { id: "U005", name: "Amit Kulkarni", email: "amit.kulkarni@starairwell.com", phone: "+91 76543 21098", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-30 17:22", createdAt: "2024-05-15", locationSharing: true, initials: "AK", color: "#7C3AED", managerId: "U002", targetAmount: 160 },
+  { id: "U006", name: "Suresh Pillai", email: "suresh.pillai@starairwell.com", phone: "+91 65432 10987", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 09:00", createdAt: "2024-05-15", locationSharing: true, initials: "SP", color: "#D97706", managerId: "U002", targetAmount: 160 },
+  { id: "U007", name: "Deepak Verma", email: "deepak.verma@starairwell.com", phone: "+91 54321 09876", role: "Sales Engineer", department: "Sales", status: "Active", lastLogin: "2026-08-31 07:55", createdAt: "2024-06-01", locationSharing: true, initials: "DV", color: "#DC2626", managerId: "U002", targetAmount: 150 },
+  { id: "U008", name: "Kavya Sharma", email: "kavya.sharma@starairwell.com", phone: "+91 43210 98765", role: "Field Support", department: "Service", status: "Active", lastLogin: "2026-08-31 07:30", createdAt: "2024-07-01", locationSharing: true, initials: "KS", color: "#0891B2", managerId: "U002" },
+  { id: "U009", name: "Nikhil Patil", email: "nikhil.patil@starairwell.com", phone: "+91 32109 87654", role: "Field Support", department: "Service", status: "Inactive", lastLogin: "2026-08-25 16:00", createdAt: "2024-07-15", locationSharing: false, initials: "NP", color: "#64748B", managerId: "U002" },
   { id: "U010", name: "Meera Joshi", email: "meera.joshi@starairwell.com", phone: "+91 21098 76543", role: "Viewer", department: "Finance", status: "Invited", lastLogin: "Never", createdAt: "2026-08-28", locationSharing: false, initials: "MJ", color: "#9333EA" },
 ];
 
@@ -206,12 +208,14 @@ export default function UserManagement() {
         </table>
       </div>
 
-      {showModal && <UserModal mode={modalMode} user={selected} onClose={() => setShowModal(false)} />}
+      {showModal && <UserModal mode={modalMode} user={selected} users={users} onClose={() => setShowModal(false)} />}
     </div>
   );
 }
 
-function UserModal({ mode, user, onClose }: { mode: "add" | "edit"; user: User | null; onClose: () => void }) {
+function UserModal({ mode, user, users, onClose }: { mode: "add" | "edit"; user: User | null; users: User[]; onClose: () => void }) {
+  const managers = users.filter((u) => u.role === "Sales Manager");
+
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
@@ -244,6 +248,19 @@ function UserModal({ mode, user, onClose }: { mode: "add" | "edit"; user: User |
               className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
               {["Management","Sales","Service","Finance","Operations"].map(d => <option key={d}>{d}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Reports to</label>
+            <select defaultValue={user?.managerId ?? ""}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
+              <option value="">— None —</option>
+              {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Target Amount (₹ Lakhs)</label>
+            <input type="number" defaultValue={user?.targetAmount ?? ""}
+              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
           </div>
           <div className="col-span-2 flex items-center gap-3 p-3 bg-slate-50 rounded border border-slate-200">
             <div className="flex-1">
