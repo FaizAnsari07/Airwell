@@ -32,6 +32,29 @@ export interface Payment {
   documentId?: string;
 }
 
+// Demo receipts backing the Bank Transfer installments below.
+const DEMO_PAYMENT_DOCUMENTS: LeadDocument[] = [
+  { id: "doc-pay-demo-1", leadId: "L003", name: "tata-motors-advance-transfer.pdf", category: "Payment Receipt", uploadedAt: "2026-08-30", uploadedBy: "Amit Kulkarni" },
+  { id: "doc-pay-demo-2", leadId: "L005", name: "cipla-panels-bank-transfer.pdf", category: "Payment Receipt", uploadedAt: "2026-08-25", uploadedBy: "Suresh Pillai" },
+  { id: "doc-pay-demo-3", leadId: "L008", name: "hdfc-advance-loi-transfer.pdf", category: "Payment Receipt", uploadedAt: "2026-09-03", uploadedBy: "Suresh Pillai" },
+  { id: "doc-pay-demo-4", leadId: "L008", name: "hdfc-milestone2-chw-transfer.pdf", category: "Payment Receipt", uploadedAt: "2026-09-08", uploadedBy: "Suresh Pillai" },
+];
+
+// Demo installments for 3 of the 4 Won leads (Sun Pharma is left with none,
+// to also show the empty-state "record the first payment" prompt).
+const DEMO_PAYMENTS: Payment[] = [
+  // L003 — Tata Motors Assembly Line Cooling (Value ₹35L)
+  { id: "pay-demo-1", leadId: "L003", amount: 15, method: "Bank Transfer", note: "Advance received on PO confirmation", date: "2026-08-30", documentId: "doc-pay-demo-1" },
+  { id: "pay-demo-2", leadId: "L003", amount: 10, method: "Cash", note: "Second installment collected on-site", date: "2026-09-05" },
+  // L005 — Cipla Pharma Cold Storage (Value ₹18.5L)
+  { id: "pay-demo-3", leadId: "L005", amount: 2, method: "Cash", note: "Token advance on order confirmation", date: "2026-08-20" },
+  { id: "pay-demo-4", leadId: "L005", amount: 1, method: "Bank Transfer", note: "Partial payment for cold storage panels", date: "2026-08-25", documentId: "doc-pay-demo-2" },
+  { id: "pay-demo-5", leadId: "L005", amount: 2.35, method: "Cash", note: "Additional installment for DX units", date: "2026-08-30" },
+  // L008 — HDFC Bank Data Center (Value ₹65L)
+  { id: "pay-demo-6", leadId: "L008", amount: 20, method: "Bank Transfer", note: "Advance payment against LOI", date: "2026-09-03", documentId: "doc-pay-demo-3" },
+  { id: "pay-demo-7", leadId: "L008", amount: 15, method: "Bank Transfer", note: "Second milestone payment — CHW piping complete", date: "2026-09-08", documentId: "doc-pay-demo-4" },
+];
+
 export interface AppNotification {
   id: string;
   message: string;
@@ -237,8 +260,8 @@ function generateId(prefix: string) {
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [currentUserId, setCurrentUserId] = useState<string>("U001");
-  const [documents, setDocuments] = useState<LeadDocument[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [documents, setDocuments] = useState<LeadDocument[]>(DEMO_PAYMENT_DOCUMENTS);
+  const [payments, setPayments] = useState<Payment[]>(DEMO_PAYMENTS);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [assignments, setAssignments] = useState<ProjectAssignment[]>([]);
   const [projectUpdates, setProjectUpdates] = useState<ProjectUpdatePhoto[]>(DEMO_PROJECT_UPDATES);
