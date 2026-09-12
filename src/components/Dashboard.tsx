@@ -2,6 +2,7 @@ import { leads, salesEngineers, monthlyData, STATUS_CONFIG } from "../data/crmDa
 import { fieldEmployees } from "../data/locationData";
 import { FieldActivityTimeline } from "./EmployeeTracking";
 import EmployeeMap, { StatusBadge } from "./EmployeeMap";
+import { formatDate } from "../utils/formatDate";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
@@ -189,7 +190,7 @@ export default function Dashboard({ onLeadClick }: { onLeadClick: (id: string) =
                   <div className="text-[11px] text-slate-400 flex gap-2">
                     <span>{l.salesEngineer.split(" ")[0]}</span>
                     <span>·</span>
-                    <span className="font-mono">{l.nextFollowUp}</span>
+                    <span className="font-mono">{formatDate(l.nextFollowUp)}</span>
                   </div>
                 </div>
                 <div className="font-mono text-[11px] text-slate-500 flex-shrink-0">₹{l.valueLakhs}L</div>

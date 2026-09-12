@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { leads, STATUS_CONFIG } from "../data/crmData";
 import type { Lead } from "../data/crmData";
+import { formatDate } from "../utils/formatDate";
 
 const TODAY = "2026-08-31";
 
@@ -128,7 +129,7 @@ export default function FollowUps({ onLeadClick }: { onLeadClick: (id: string) =
                           {isOverdue ? "⚠️ Overdue" : isToday ? "🔔 Today" : "📅 Upcoming"}
                         </span>
                         <div className="font-mono text-xs text-slate-400 mt-1">
-                          {isNoActivity ? `Last: ${lead.lastActivity}` : lead.nextFollowUp}
+                          {isNoActivity ? `Last: ${formatDate(lead.lastActivity)}` : formatDate(lead.nextFollowUp)}
                         </div>
                       </div>
                     </div>

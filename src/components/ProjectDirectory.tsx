@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { leads, STATUS_CONFIG } from "../data/crmData";
 import type { LeadStatus } from "../data/crmData";
+import { formatDate } from "../utils/formatDate";
 
 export default function ProjectDirectory({ onLeadClick }: { onLeadClick: (id: string) => void }) {
   const [search, setSearch] = useState("");
@@ -92,9 +93,9 @@ export default function ProjectDirectory({ onLeadClick }: { onLeadClick: (id: st
                     {p.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 font-mono text-slate-400">{p.lastActivity}</td>
+                <td className="px-4 py-3 font-mono text-slate-400">{formatDate(p.lastActivity)}</td>
                 <td className="px-4 py-3 font-mono text-slate-400">
-                  {p.nextFollowUp || "—"}
+                  {p.nextFollowUp ? formatDate(p.nextFollowUp) : "—"}
                 </td>
               </tr>
             ))}

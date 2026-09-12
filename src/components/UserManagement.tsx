@@ -2,6 +2,7 @@ import { useState } from "react";
 import { USERS, ROLE_COLORS, STATUS_COLORS, visibleUsersFor, departmentForRole } from "../data/usersData";
 import type { Role, UserStatus, User } from "../data/usersData";
 import { useAppData } from "../context/AppDataContext";
+import { formatDate } from "../utils/formatDate";
 
 const ALL_ROLES: Role[] = ["Super Admin", "Sales Manager", "Sales Engineer", "Site Engineer", "Field Support", "Viewer"];
 
@@ -167,8 +168,8 @@ export default function UserManagement() {
                     <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${u.locationSharing ? "translate-x-4" : "translate-x-0.5"}`} />
                   </button>
                 </td>
-                <td className="px-4 py-3 font-mono text-slate-400 text-[11px]">{u.lastLogin}</td>
-                <td className="px-4 py-3 font-mono text-slate-400 text-[11px]">{u.createdAt}</td>
+                <td className="px-4 py-3 font-mono text-slate-400 text-[11px]">{formatDate(u.lastLogin)}</td>
+                <td className="px-4 py-3 font-mono text-slate-400 text-[11px]">{formatDate(u.createdAt)}</td>
                 <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <button onClick={() => openEdit(u)} className="text-[11px] text-[#253580] font-medium hover:underline">Edit</button>
@@ -298,8 +299,8 @@ function UserDetailModal({
             <DetailRow label="Reports To" value={manager?.name ?? "— None —"} />
             {user.targetAmount !== undefined && <DetailRow label="Target Amount" value={`₹${user.targetAmount}L`} />}
             <DetailRow label="Location Sharing" value={user.locationSharing ? "Enabled" : "Disabled"} />
-            <DetailRow label="Last Login" value={user.lastLogin} />
-            <DetailRow label="Created" value={user.createdAt} />
+            <DetailRow label="Last Login" value={formatDate(user.lastLogin)} />
+            <DetailRow label="Created" value={formatDate(user.createdAt)} />
           </div>
         </div>
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-slate-200">

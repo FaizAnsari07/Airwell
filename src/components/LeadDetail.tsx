@@ -8,6 +8,7 @@ import StatusChangeModal from "./shared/StatusChangeModal";
 import WonModal from "./shared/WonModal";
 import PaymentModal from "./shared/PaymentModal";
 import FileUploadButton from "./shared/FileUploadButton";
+import { formatDate } from "../utils/formatDate";
 
 export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack: () => void }) {
   const {
@@ -91,10 +92,10 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
 
         {/* Dates */}
         <div className="p-4 space-y-3 border-b border-slate-100 text-xs">
-          <DetailRow label="Enquiry Date" value={lead.enquiryDate} mono />
-          <DetailRow label="Expected Booking" value={lead.expectedBookingDate || "—"} mono />
-          <DetailRow label="Next Follow-up" value={lead.nextFollowUp || "—"} mono highlight={!!lead.nextFollowUp && lead.nextFollowUp < new Date().toISOString().slice(0, 10)} />
-          <DetailRow label="Last Activity" value={lead.lastActivity} mono />
+          <DetailRow label="Enquiry Date" value={formatDate(lead.enquiryDate)} mono />
+          <DetailRow label="Expected Booking" value={lead.expectedBookingDate ? formatDate(lead.expectedBookingDate) : "—"} mono />
+          <DetailRow label="Next Follow-up" value={lead.nextFollowUp ? formatDate(lead.nextFollowUp) : "—"} mono highlight={!!lead.nextFollowUp && lead.nextFollowUp < new Date().toISOString().slice(0, 10)} />
+          <DetailRow label="Last Activity" value={formatDate(lead.lastActivity)} mono />
         </div>
 
         {/* Contact */}
@@ -293,7 +294,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-semibold text-slate-800">{act.type}</span>
                           <span className="text-[10px] text-slate-400">·</span>
-                          <span className="font-mono text-[11px] text-slate-400">{act.date}</span>
+                          <span className="font-mono text-[11px] text-slate-400">{formatDate(act.date)}</span>
                           <span className="text-[10px] text-slate-400">·</span>
                           <span className="text-[11px] text-slate-500">{act.by}</span>
                         </div>
@@ -331,10 +332,10 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                 <DetailRow label="Probability" value={`${lead.probability}%`} mono />
               </DetailCard>
               <DetailCard title="Timeline">
-                <DetailRow label="Enquiry Received" value={lead.enquiryDate} mono />
-                <DetailRow label="Expected Booking" value={lead.expectedBookingDate || "Not set"} mono />
-                <DetailRow label="Next Follow-up" value={lead.nextFollowUp || "Not set"} mono />
-                <DetailRow label="Last Activity" value={lead.lastActivity} mono />
+                <DetailRow label="Enquiry Received" value={formatDate(lead.enquiryDate)} mono />
+                <DetailRow label="Expected Booking" value={lead.expectedBookingDate ? formatDate(lead.expectedBookingDate) : "Not set"} mono />
+                <DetailRow label="Next Follow-up" value={lead.nextFollowUp ? formatDate(lead.nextFollowUp) : "Not set"} mono />
+                <DetailRow label="Last Activity" value={formatDate(lead.lastActivity)} mono />
               </DetailCard>
               {lead.remarks && (
                 <div className="col-span-2 bg-white rounded-md border border-slate-200 p-4">
@@ -355,7 +356,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                           <span className="font-medium text-slate-700">{d.name}</span>
                           <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{d.category}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-mono">{d.uploadedAt} · {d.uploadedBy}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{formatDate(d.uploadedAt)} · {d.uploadedBy}</span>
                       </div>
                     ))}
                   </div>
@@ -367,10 +368,10 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                   managers={managers}
                   assignment={assignment}
                   currentUserRole={currentUser.role}
-                  onAssign={(managerId, staffId) => {
-                    assignProject(lead.id, managerId, staffId);
+                  onAssign={(managerId, staffIds) => {
+                    assignProject(lead.id, managerId, staffIds);
                     addNotification(`You've been assigned to ${lead.projectName}`, managerId);
-                    if (staffId) addNotification(`You've been assigned to ${lead.projectName}`, staffId);
+                    staffIds?.forEach((id) => addNotification(`You've been assigned to ${lead.projectName}`, id));
                   }}
                 />
               )}
@@ -393,7 +394,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                   <input type="checkbox" className="rounded" />
                   <div>
                     <div className="text-xs font-medium text-slate-800">Follow-up call — price decision</div>
-                    <div className="text-[11px] text-slate-400 font-mono">{lead.nextFollowUp}</div>
+                    <div className="text-[11px] text-slate-400 font-mono">{formatDate(lead.nextFollowUp)}</div>
                   </div>
                   <span className="ml-auto text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded font-medium">Upcoming</span>
                 </div>
@@ -403,7 +404,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                   <input type="checkbox" checked className="rounded" readOnly />
                   <div>
                     <div className="text-xs font-medium text-slate-800 line-through">Send technical specifications</div>
-                    <div className="text-[11px] text-slate-400 font-mono">{lead.enquiryDate}</div>
+                    <div className="text-[11px] text-slate-400 font-mono">{formatDate(lead.enquiryDate)}</div>
                   </div>
                   <span className="ml-auto text-[11px] text-green-600 bg-green-50 px-2 py-0.5 rounded font-medium">Done</span>
                 </div>
@@ -517,15 +518,19 @@ function AssignmentPanel({
   managers, assignment, currentUserRole, onAssign,
 }: {
   managers: { id: string; name: string }[];
-  assignment: { managerId: string; staffId?: string } | undefined;
+  assignment: { managerId: string; staffIds?: string[] } | undefined;
   currentUserRole: string;
-  onAssign: (managerId: string, staffId?: string) => void;
+  onAssign: (managerId: string, staffIds?: string[]) => void;
 }) {
   const [selectedManager, setSelectedManager] = useState(assignment?.managerId ?? "");
-  const [selectedStaff, setSelectedStaff] = useState(assignment?.staffId ?? "");
+  const [selectedStaff, setSelectedStaff] = useState<string[]>(assignment?.staffIds ?? []);
   const staffOptions = USERS.filter((u) => u.managerId === selectedManager);
 
   if (currentUserRole !== "Super Admin" && !assignment) return null;
+
+  function toggleStaff(id: string) {
+    setSelectedStaff((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
+  }
 
   return (
     <div className="col-span-2 bg-white rounded-md border border-slate-200 p-4">
@@ -533,18 +538,20 @@ function AssignmentPanel({
       {assignment && (
         <div className="text-xs text-slate-600 mb-3">
           Assigned to <span className="font-medium">{USERS.find((u) => u.id === assignment.managerId)?.name ?? "—"}</span>
-          {assignment.staffId && (
-            <> → <span className="font-medium">{USERS.find((u) => u.id === assignment.staffId)?.name ?? "—"}</span></>
+          {assignment.staffIds && assignment.staffIds.length > 0 && (
+            <> → <span className="font-medium">
+              {assignment.staffIds.map((id) => USERS.find((u) => u.id === id)?.name ?? "—").join(", ")}
+            </span></>
           )}
         </div>
       )}
       {currentUserRole === "Super Admin" && (
-        <div className="grid grid-cols-2 gap-3 items-end">
+        <div className="grid grid-cols-2 gap-3 items-start">
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Manager</label>
             <select
               value={selectedManager}
-              onChange={(e) => { setSelectedManager(e.target.value); setSelectedStaff(""); }}
+              onChange={(e) => { setSelectedManager(e.target.value); setSelectedStaff([]); }}
               className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400"
             >
               <option value="">Select manager…</option>
@@ -552,19 +559,27 @@ function AssignmentPanel({
             </select>
           </div>
           <div>
-            <label className="block text-[11px] font-medium text-slate-600 mb-1">Staff / Engineer</label>
-            <select
-              value={selectedStaff}
-              onChange={(e) => setSelectedStaff(e.target.value)}
-              disabled={!selectedManager}
-              className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400 disabled:opacity-40"
-            >
-              <option value="">Select staff…</option>
-              {staffOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Staff / Engineer (select multiple)</label>
+            <div className={`border border-slate-200 rounded p-2 space-y-1 max-h-32 overflow-y-auto ${!selectedManager ? "opacity-40" : ""}`}>
+              {!selectedManager && <div className="text-[11px] text-slate-400">Select a manager first</div>}
+              {selectedManager && staffOptions.length === 0 && (
+                <div className="text-[11px] text-slate-400">No staff under this manager</div>
+              )}
+              {staffOptions.map((s) => (
+                <label key={s.id} className="flex items-center gap-2 text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={selectedStaff.includes(s.id)}
+                    onChange={() => toggleStaff(s.id)}
+                    disabled={!selectedManager}
+                  />
+                  {s.name} <span className="text-[10px] text-slate-400">({s.role})</span>
+                </label>
+              ))}
+            </div>
           </div>
           <button
-            onClick={() => onAssign(selectedManager, selectedStaff || undefined)}
+            onClick={() => onAssign(selectedManager, selectedStaff.length > 0 ? selectedStaff : undefined)}
             disabled={!selectedManager}
             className="col-span-2 text-xs font-semibold text-white rounded py-1.5 disabled:opacity-40"
             style={{ background: "#253580" }}
@@ -602,11 +617,6 @@ function DetailCard({ title, children }: { title: string; children: React.ReactN
       <div className="text-xs space-y-0">{children}</div>
     </div>
   );
-}
-
-function formatDDMMYYYY(iso: string): string {
-  const [year, month, day] = iso.split("-");
-  return `${day}-${month}-${year}`;
 }
 
 function ProjectUpdatesTab({
@@ -694,7 +704,7 @@ function ProjectUpdatesTab({
                   </div>
                   <div className="flex-1 min-w-0 pb-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-semibold text-slate-800 font-mono">{formatDDMMYYYY(d)}</span>
+                      <span className="text-xs font-semibold text-slate-800 font-mono">{formatDate(d)}</span>
                       <span className="text-[10px] text-slate-400">· {dayUpdates.length} photo{dayUpdates.length === 1 ? "" : "s"}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">

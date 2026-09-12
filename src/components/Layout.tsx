@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import airwellLogo from "./Airwell-Logo.webp";
 import { useAppData } from "../context/AppDataContext";
+import { formatDate } from "../utils/formatDate";
 
 export type NavPage =
   | "dashboard" | "leads" | "pipeline" | "projects" | "followups"
@@ -277,7 +278,7 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
                     className={`w-full text-left px-3 py-2 border-b border-slate-50 last:border-0 hover:bg-slate-50 ${n.read ? "opacity-60" : ""}`}
                   >
                     <div className="text-xs text-slate-700">{n.message}</div>
-                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">{n.date}</div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">{formatDate(n.date)}</div>
                   </button>
                 ))}
               </div>

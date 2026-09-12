@@ -3,6 +3,7 @@ import { leads, STATUS_CONFIG, SALES_ENGINEERS } from "../data/crmData";
 import type { Lead, LeadStatus, ClientType, EnquirySource, Application, SystemType } from "../data/crmData";
 import { useAppData } from "../context/AppDataContext";
 import CreatableSelect from "./shared/CreatableSelect";
+import { formatDate } from "../utils/formatDate";
 
 const ALL_STATUSES: LeadStatus[] = [
   "New Enquiry", "Qualified", "Site Visit", "Quotation Sent",
@@ -196,10 +197,10 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
                 <td className="px-3 py-2">
                   <StatusBadge status={l.status} />
                 </td>
-                <td className="px-3 py-2 font-mono text-slate-500">{l.expectedBookingDate || "—"}</td>
+                <td className="px-3 py-2 font-mono text-slate-500">{l.expectedBookingDate ? formatDate(l.expectedBookingDate) : "—"}</td>
                 <td className="px-3 py-2 font-mono text-slate-500">
                   {l.nextFollowUp ? (
-                    <span className={isOverdue(l.nextFollowUp) ? "text-red-600 font-semibold" : ""}>{l.nextFollowUp}</span>
+                    <span className={isOverdue(l.nextFollowUp) ? "text-red-600 font-semibold" : ""}>{formatDate(l.nextFollowUp)}</span>
                   ) : "—"}
                 </td>
                 <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>

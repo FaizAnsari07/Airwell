@@ -43,7 +43,7 @@ export interface AppNotification {
 export interface ProjectAssignment {
   leadId: string;
   managerId: string;
-  staffId?: string;
+  staffIds?: string[];
   assignedAt: string;
 }
 
@@ -216,7 +216,7 @@ interface AppDataContextValue {
   notificationsForCurrentUser: () => AppNotification[];
 
   assignments: ProjectAssignment[];
-  assignProject: (leadId: string, managerId: string, staffId?: string) => void;
+  assignProject: (leadId: string, managerId: string, staffIds?: string[]) => void;
   assignmentForLead: (leadId: string) => ProjectAssignment | undefined;
 
   projectUpdates: ProjectUpdatePhoto[];
@@ -280,10 +280,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   }
 
-  function assignProject(leadId: string, managerId: string, staffId?: string) {
+  function assignProject(leadId: string, managerId: string, staffIds?: string[]) {
     setAssignments((prev) => [
       ...prev.filter((a) => a.leadId !== leadId),
-      { leadId, managerId, staffId, assignedAt: new Date().toISOString().slice(0, 16).replace("T", " ") },
+      { leadId, managerId, staffIds, assignedAt: new Date().toISOString().slice(0, 16).replace("T", " ") },
     ]);
   }
 

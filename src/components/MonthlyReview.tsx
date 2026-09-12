@@ -4,6 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
 } from "recharts";
+import { formatDate } from "../utils/formatDate";
 
 type Section = "booking-forecast" | "collection-forecast" | "booking-data" | "billing-progress" | "enquiry-gen";
 
@@ -296,7 +297,7 @@ function BookingData({ monthLabel }: { monthLabel: string }) {
                     {l.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 font-mono text-slate-500">{l.expectedBookingDate}</td>
+                <td className="px-4 py-3 font-mono text-slate-500">{formatDate(l.expectedBookingDate)}</td>
               </tr>
             ))}
           </tbody>

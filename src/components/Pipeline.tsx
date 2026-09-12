@@ -5,6 +5,7 @@ import StatusChangeModal from "./shared/StatusChangeModal";
 import WonModal from "./shared/WonModal";
 import { USERS, visibleUsersFor } from "../data/usersData";
 import { useAppData } from "../context/AppDataContext";
+import { formatDate } from "../utils/formatDate";
 
 const STAGE_COLORS: Record<LeadStatus, string> = {
   "New Enquiry":       "border-t-slate-400",
@@ -227,7 +228,7 @@ function KanbanCard({
 
         {card.nextFollowUp && (
           <div className={`flex items-center gap-1 mt-1.5 text-[10px] font-mono ${isOverdue ? "text-red-500" : "text-slate-400"}`}>
-            {isOverdue ? "⚠️" : "📅"} {card.nextFollowUp}
+            {isOverdue ? "⚠️" : "📅"} {formatDate(card.nextFollowUp)}
           </div>
         )}
       </div>
