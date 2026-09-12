@@ -1,16 +1,22 @@
 import { useState, useMemo } from "react";
 import { leads, STATUS_CONFIG, SALES_ENGINEERS } from "../data/crmData";
-import type { Lead, LeadStatus, ClientType, Application, SystemType } from "../data/crmData";
+import type { Lead, LeadStatus, ClientType, EnquirySource, Application, SystemType } from "../data/crmData";
 
 const ALL_STATUSES: LeadStatus[] = [
   "New Enquiry", "Qualified", "Site Visit", "Quotation Sent",
   "Follow-up", "Negotiation", "Booking Confirmed", "Advance Received", "Won", "Lost",
 ];
 
-const LOCATIONS = ["Pune", "Mumbai", "Hyderabad", "Bangalore", "Chennai", "Nagpur", "Nashik", "Vadodara"];
-const APPLICATIONS: Application[] = ["Process Cooling", "Comfort AC", "Data Center Cooling", "Cold Storage", "Industrial HVAC", "Pharma"];
-const SYSTEM_TYPES: SystemType[] = ["Chiller", "VRF", "AHU", "DX Split", "Package Unit", "Cooling Tower"];
-const CLIENT_TYPES: ClientType[] = ["Industrial", "Commercial", "Institutional", "Government"];
+const LOCATIONS = Array.from(new Set(leads.map((l) => l.location))).sort();
+const APPLICATIONS: Application[] = [
+  "Residence", "Office", "Others", "Villa", "Apartment", "Club House",
+  "Showroom", "Banquet / Convention Hall", "Factory", "Hospital", "Hotel", "Restaurant", "Airport",
+];
+const SYSTEM_TYPES: SystemType[] = [
+  "VRV", "DX", "DX Ductable", "DX Cassette", "DX Hi Wall", "Ventilation", "CHW", "FITOUT", "AHU with VRV", "AHU with DX",
+];
+const CLIENT_TYPES: ClientType[] = ["Individual", "Corporate", "Builder / Developer", "TKC", "Government"];
+const ENQUIRY_SOURCES: EnquirySource[] = ["Client", "Architect", "PMC", "TKC", "Consultant"];
 
 export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => void }) {
   const [search, setSearch] = useState("");
@@ -140,7 +146,7 @@ export default function Leads({ onLeadClick }: { onLeadClick: (id: string) => vo
               <SortTH col="application" label="Application" active={sortCol} dir={sortDir} onSort={toggleSort} />
               <SortTH col="location" label="Location" active={sortCol} dir={sortDir} onSort={toggleSort} />
               <SortTH col="systemType" label="System" active={sortCol} dir={sortDir} onSort={toggleSort} />
-              <SortTH col="tr" label="HP/TR" active={sortCol} dir={sortDir} onSort={toggleSort} className="text-right" />
+              <SortTH col="capacity" label="HP/TR" active={sortCol} dir={sortDir} onSort={toggleSort} className="text-right" />
               <SortTH col="valueLakhs" label="Value (₹L)" active={sortCol} dir={sortDir} onSort={toggleSort} className="text-right" />
               <SortTH col="status" label="Status" active={sortCol} dir={sortDir} onSort={toggleSort} />
               <SortTH col="expectedBookingDate" label="Exp. Booking" active={sortCol} dir={sortDir} onSort={toggleSort} />
@@ -259,6 +265,8 @@ function isOverdue(dateStr: string) {
 }
 
 function AddLeadModal({ onClose }: { onClose: () => void }) {
+  const [capacityUnit, setCapacityUnit] = useState<"HP" | "TR">("TR");
+
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-6">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -273,6 +281,7 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
             { label: "Client Contact", type: "text" },
             { label: "Client Email", type: "email" },
             { label: "Location", type: "text" },
+            { label: "Source Name", type: "text" },
           ].map((f) => (
             <div key={f.label} className={f.span === 2 ? "col-span-2" : ""}>
               <label className="block text-[11px] font-medium text-slate-600 mb-1">{f.label}</label>
@@ -286,10 +295,54 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Client Type</label>
+            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
+              {CLIENT_TYPES.map(c => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Enquiry Source</label>
+            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
+              {ENQUIRY_SOURCES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Application</label>
+            <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
+              {APPLICATIONS.map(a => <option key={a}>{a}</option>)}
+            </select>
+          </div>
+          <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">System Type</label>
             <select className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400">
-              {["Chiller", "VRF", "AHU", "DX Split", "Package Unit", "Cooling Tower"].map(s => <option key={s}>{s}</option>)}
+              {SYSTEM_TYPES.map(s => <option key={s}>{s}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-600 mb-1">Capacity</label>
+            <div className="flex gap-2">
+              <input type="number" className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-blue-400" />
+              <div className="flex items-center gap-2 flex-shrink-0 text-[11px] text-slate-600">
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="capacityUnit"
+                    checked={capacityUnit === "HP"}
+                    onChange={() => setCapacityUnit("HP")}
+                  />
+                  HP
+                </label>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="capacityUnit"
+                    checked={capacityUnit === "TR"}
+                    onChange={() => setCapacityUnit("TR")}
+                  />
+                  TR
+                </label>
+              </div>
+            </div>
           </div>
           <div>
             <label className="block text-[11px] font-medium text-slate-600 mb-1">Value (₹ Lakhs)</label>
