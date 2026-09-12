@@ -9,6 +9,7 @@ export default function ProjectDirectory({ onLeadClick }: { onLeadClick: (id: st
 
   const projects = useMemo(() => {
     return leads.filter(l => {
+      if (l.status !== "Won") return false;
       if (search && !l.projectName.toLowerCase().includes(search.toLowerCase()) &&
           !l.clientName.toLowerCase().includes(search.toLowerCase())) return false;
       if (filterSE && l.salesEngineer !== filterSE) return false;
