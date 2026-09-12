@@ -185,7 +185,10 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
 
         {/* Tabs */}
         <div className="bg-white border-b border-slate-200 px-6 flex items-center gap-5 flex-shrink-0">
-          {(["timeline", "details", "notes", "updates"] as const).map((tab) => (
+          {(lead.status === "Won"
+            ? (["timeline", "details", "notes", "updates"] as const)
+            : (["timeline", "details", "notes"] as const)
+          ).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -404,7 +407,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
             </div>
           )}
 
-          {activeTab === "updates" && (
+          {activeTab === "updates" && lead.status === "Won" && (
             <ProjectUpdatesTab
               leadId={lead.id}
               updates={updates}
@@ -479,6 +482,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
           onConfirm={(newStatus) => {
             updateLead({ status: newStatus });
             setPendingStatus(null);
+            if (activeTab === "updates") setActiveTab("timeline");
           }}
         />
       )}

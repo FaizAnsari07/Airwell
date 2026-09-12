@@ -1,6 +1,14 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { USERS, type User } from "../data/usersData";
 
+function placeholderPhoto(label: string, color: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320">
+    <rect width="100%" height="100%" fill="${color}"/>
+    <text x="50%" y="50%" font-family="system-ui, sans-serif" font-size="22" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${label}</text>
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 export interface LeadDocument {
   id: string;
   leadId: string;
@@ -45,6 +53,72 @@ export interface ProjectUpdatePhoto {
   engineerName: string;
   caption?: string;
 }
+
+const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
+  {
+    id: "upd-demo-1",
+    leadId: "L011",
+    imageName: "site-mobilization.jpg",
+    previewUrl: placeholderPhoto("Site Mobilization", "#253580"),
+    date: "2026-07-06",
+    engineerName: "Kavya Sharma",
+    caption: "Material delivered on site, cleanroom access secured. Team mobilized.",
+  },
+  {
+    id: "upd-demo-2",
+    leadId: "L011",
+    imageName: "ductwork-layout-marking.jpg",
+    previewUrl: placeholderPhoto("Ductwork Layout Marking", "#3D50A0"),
+    date: "2026-07-09",
+    engineerName: "Kavya Sharma",
+    caption: "Layout marked for AHU ducting as per approved drawing.",
+  },
+  {
+    id: "upd-demo-3",
+    leadId: "L011",
+    imageName: "ahu-unit-positioning.jpg",
+    previewUrl: placeholderPhoto("AHU Unit Positioning", "#7C3AED"),
+    date: "2026-07-12",
+    engineerName: "Nikhil Patil",
+    caption: "AHU unit lifted and positioned on the mounting frame.",
+  },
+  {
+    id: "upd-demo-4",
+    leadId: "L011",
+    imageName: "ductwork-install-section-a.jpg",
+    previewUrl: placeholderPhoto("Ductwork Install — Section A", "#0891B2"),
+    date: "2026-07-15",
+    engineerName: "Kavya Sharma",
+    caption: "Section A ducting installed and insulated.",
+  },
+  {
+    id: "upd-demo-5",
+    leadId: "L011",
+    imageName: "ductwork-install-section-b.jpg",
+    previewUrl: placeholderPhoto("Ductwork Install — Section B", "#0E7490"),
+    date: "2026-07-15",
+    engineerName: "Kavya Sharma",
+    caption: "Section B ducting installed same day, ahead of schedule.",
+  },
+  {
+    id: "upd-demo-6",
+    leadId: "L011",
+    imageName: "electrical-control-panel.jpg",
+    previewUrl: placeholderPhoto("Electrical & Control Panel", "#D97706"),
+    date: "2026-07-18",
+    engineerName: "Nikhil Patil",
+    caption: "Control panel wiring completed, ready for power-on.",
+  },
+  {
+    id: "upd-demo-7",
+    leadId: "L011",
+    imageName: "system-testing-commissioning.jpg",
+    previewUrl: placeholderPhoto("Testing & Commissioning", "#39B849"),
+    date: "2026-07-22",
+    engineerName: "Kavya Sharma",
+    caption: "System powered on. Airflow and temperature readings within spec.",
+  },
+];
 
 export interface StatusChangeLog {
   id: string;
@@ -101,7 +175,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [assignments, setAssignments] = useState<ProjectAssignment[]>([]);
-  const [projectUpdates, setProjectUpdates] = useState<ProjectUpdatePhoto[]>([]);
+  const [projectUpdates, setProjectUpdates] = useState<ProjectUpdatePhoto[]>(DEMO_PROJECT_UPDATES);
   const [statusChangeLogs, setStatusChangeLogs] = useState<StatusChangeLog[]>([]);
 
   const currentUser = USERS.find((u) => u.id === currentUserId) ?? USERS[0];
