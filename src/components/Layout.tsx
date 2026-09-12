@@ -1,5 +1,7 @@
 import { ReactNode, useState } from "react";
 import airwellLogo from "./Airwell-Logo.webp";
+import { USERS } from "../data/usersData";
+import { useAppData } from "../context/AppDataContext";
 
 export type NavPage =
   | "dashboard" | "leads" | "pipeline" | "projects" | "followups"
@@ -147,9 +149,12 @@ const NAV_SECTIONS = [
 ];
 
 export default function Layout({ children, activePage, onNavigate }: LayoutProps) {
+  const { currentUser, setCurrentUserId, notificationsForCurrentUser, markNotificationRead } = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const notifications = notificationsForCurrentUser();
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="flex h-full bg-slate-100 overflow-hidden">
@@ -260,13 +265,47 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
               className="relative w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 text-slate-500"
             >
               <BellIcon className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
+              )}
             </button>
+            {notifOpen && (
+              <div className="absolute right-0 top-10 w-80 bg-white rounded-md shadow-xl border border-slate-200 z-50 max-h-96 overflow-y-auto">
+                <div className="px-3 py-2 border-b border-slate-100 text-xs font-semibold text-slate-700">
+                  Notifications {unreadCount > 0 && <span className="text-red-500">({unreadCount} new)</span>}
+                </div>
+                {notifications.length === 0 && (
+                  <div className="px-3 py-6 text-center text-xs text-slate-400">No notifications yet</div>
+                )}
+                {notifications.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => markNotificationRead(n.id)}
+                    className={`w-full text-left px-3 py-2 border-b border-slate-50 last:border-0 hover:bg-slate-50 ${n.read ? "opacity-60" : ""}`}
+                  >
+                    <div className="text-xs text-slate-700">{n.message}</div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">{n.date}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* Viewing as */}
+          <select
+            value={currentUser.id}
+            onChange={(e) => setCurrentUserId(e.target.value)}
+            title="Viewing as (demo — this app has no login yet)"
+            className="text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 text-slate-600 focus:outline-none max-w-[160px]"
+          >
+            {USERS.map((u) => (
+              <option key={u.id} value={u.id}>{u.name} · {u.role}</option>
+            ))}
+          </select>
+
           {/* Avatar */}
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: "#253580" }}>
-            SM
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: currentUser.color }}>
+            {currentUser.initials}
           </div>
         </header>
 
