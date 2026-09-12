@@ -10,16 +10,33 @@ export type LeadStatus =
   | "Won"
   | "Lost";
 
-export type ClientType = "Industrial" | "Commercial" | "Institutional" | "Residential" | "Government";
-export type EnquirySource = "Direct" | "Referral" | "Consultant" | "Tender" | "Exhibition" | "Online";
+export type ClientType = "Individual" | "Corporate" | "Builder / Developer" | "TKC" | "Government";
+export type EnquirySource = "Client" | "Architect" | "PMC" | "TKC" | "Consultant";
 export type Application =
-  | "Process Cooling"
-  | "Comfort AC"
-  | "Data Center Cooling"
-  | "Cold Storage"
-  | "Industrial HVAC"
-  | "Pharma";
-export type SystemType = "Chiller" | "VRF" | "AHU" | "DX Split" | "Package Unit" | "Cooling Tower";
+  | "Residence"
+  | "Office"
+  | "Others"
+  | "Villa"
+  | "Apartment"
+  | "Club House"
+  | "Showroom"
+  | "Banquet / Convention Hall"
+  | "Factory"
+  | "Hospital"
+  | "Hotel"
+  | "Restaurant"
+  | "Airport";
+export type SystemType =
+  | "VRV"
+  | "DX"
+  | "DX Ductable"
+  | "DX Cassette"
+  | "DX Hi Wall"
+  | "Ventilation"
+  | "CHW"
+  | "FITOUT"
+  | "AHU with VRV"
+  | "AHU with DX";
 
 export interface Lead {
   id: string;
@@ -32,8 +49,8 @@ export interface Lead {
   application: Application;
   location: string;
   systemType: SystemType;
-  hp: number;
-  tr: number;
+  capacity: number;
+  capacityUnit: "HP" | "TR";
   valueLakhs: number;
   status: LeadStatus;
   expectedBookingDate: string;
@@ -99,13 +116,13 @@ export const leads: Lead[] = [
     id: "L001", srNo: 1,
     projectName: "Bharat Forge Plant Expansion",
     salesEngineer: "Rajan Mehta",
-    clientType: "Industrial",
-    enquirySource: "Direct",
+    clientType: "Corporate",
+    enquirySource: "Client",
     sourceName: "Mr. Ramesh Patil",
-    application: "Process Cooling",
+    application: "Factory",
     location: "Pune",
-    systemType: "Chiller",
-    hp: 0, tr: 200,
+    systemType: "CHW",
+    capacity: 200, capacityUnit: "TR",
     valueLakhs: 48.5,
     status: "Negotiation",
     expectedBookingDate: "2026-09-15",
@@ -131,13 +148,13 @@ export const leads: Lead[] = [
     id: "L002", srNo: 2,
     projectName: "Apollo Hospitals HVAC Upgrade",
     salesEngineer: "Priya Desai",
-    clientType: "Institutional",
-    enquirySource: "Referral",
+    clientType: "Corporate",
+    enquirySource: "Consultant",
     sourceName: "Dr. Sunil Rao",
-    application: "Comfort AC",
+    application: "Hospital",
     location: "Mumbai",
-    systemType: "Chiller",
-    hp: 0, tr: 300,
+    systemType: "CHW",
+    capacity: 300, capacityUnit: "TR",
     valueLakhs: 72.0,
     status: "Quotation Sent",
     expectedBookingDate: "2026-10-01",
@@ -160,13 +177,13 @@ export const leads: Lead[] = [
     id: "L003", srNo: 3,
     projectName: "Tata Motors Assembly Line Cooling",
     salesEngineer: "Amit Kulkarni",
-    clientType: "Industrial",
-    enquirySource: "Tender",
+    clientType: "Corporate",
+    enquirySource: "PMC",
     sourceName: "Tata Motors Procurement",
-    application: "Industrial HVAC",
+    application: "Factory",
     location: "Pune",
-    systemType: "Cooling Tower",
-    hp: 500, tr: 0,
+    systemType: "Ventilation",
+    capacity: 500, capacityUnit: "HP",
     valueLakhs: 35.0,
     status: "Booking Confirmed",
     expectedBookingDate: "2026-08-25",
@@ -190,13 +207,13 @@ export const leads: Lead[] = [
     id: "L004", srNo: 4,
     projectName: "DLF IT Park Data Center",
     salesEngineer: "Priya Desai",
-    clientType: "Commercial",
+    clientType: "Builder / Developer",
     enquirySource: "Consultant",
     sourceName: "M/s TechCool Consultants",
-    application: "Data Center Cooling",
+    application: "Office",
     location: "Hyderabad",
-    systemType: "Chiller",
-    hp: 0, tr: 500,
+    systemType: "CHW",
+    capacity: 500, capacityUnit: "TR",
     valueLakhs: 142.0,
     status: "Site Visit",
     expectedBookingDate: "2026-11-30",
@@ -218,13 +235,13 @@ export const leads: Lead[] = [
     id: "L005", srNo: 5,
     projectName: "Cipla Pharma Cold Storage",
     salesEngineer: "Suresh Pillai",
-    clientType: "Industrial",
-    enquirySource: "Direct",
+    clientType: "Corporate",
+    enquirySource: "Client",
     sourceName: "Mr. Kiran Bhat",
-    application: "Pharma",
+    application: "Factory",
     location: "Bangalore",
-    systemType: "DX Split",
-    hp: 120, tr: 0,
+    systemType: "DX",
+    capacity: 120, capacityUnit: "HP",
     valueLakhs: 18.5,
     status: "Advance Received",
     expectedBookingDate: "2026-08-10",
@@ -249,13 +266,13 @@ export const leads: Lead[] = [
     id: "L006", srNo: 6,
     projectName: "Infosys Campus VRF System",
     salesEngineer: "Deepak Verma",
-    clientType: "Commercial",
-    enquirySource: "Referral",
+    clientType: "Corporate",
+    enquirySource: "Consultant",
     sourceName: "Mr. Anand Joshi",
-    application: "Comfort AC",
+    application: "Office",
     location: "Chennai",
-    systemType: "VRF",
-    hp: 0, tr: 150,
+    systemType: "VRV",
+    capacity: 150, capacityUnit: "TR",
     valueLakhs: 28.0,
     status: "Follow-up",
     expectedBookingDate: "2026-10-15",
@@ -279,13 +296,13 @@ export const leads: Lead[] = [
     id: "L007", srNo: 7,
     projectName: "Reliance Retail Warehouse Cooling",
     salesEngineer: "Rajan Mehta",
-    clientType: "Commercial",
-    enquirySource: "Direct",
+    clientType: "Corporate",
+    enquirySource: "Client",
     sourceName: "Mr. Sanjay Kapoor",
-    application: "Cold Storage",
+    application: "Others",
     location: "Nagpur",
-    systemType: "Package Unit",
-    hp: 200, tr: 0,
+    systemType: "DX Ductable",
+    capacity: 200, capacityUnit: "HP",
     valueLakhs: 22.0,
     status: "Qualified",
     expectedBookingDate: "2026-11-01",
@@ -307,13 +324,13 @@ export const leads: Lead[] = [
     id: "L008", srNo: 8,
     projectName: "HDFC Bank Data Center",
     salesEngineer: "Suresh Pillai",
-    clientType: "Commercial",
+    clientType: "Corporate",
     enquirySource: "Consultant",
     sourceName: "CoolTech Solutions",
-    application: "Data Center Cooling",
+    application: "Office",
     location: "Pune",
-    systemType: "Chiller",
-    hp: 0, tr: 250,
+    systemType: "CHW",
+    capacity: 250, capacityUnit: "TR",
     valueLakhs: 65.0,
     status: "Negotiation",
     expectedBookingDate: "2026-09-30",
@@ -338,13 +355,13 @@ export const leads: Lead[] = [
     id: "L009", srNo: 9,
     projectName: "Oberoi Hotel HVAC Retrofit",
     salesEngineer: "Deepak Verma",
-    clientType: "Commercial",
-    enquirySource: "Referral",
+    clientType: "Corporate",
+    enquirySource: "Consultant",
     sourceName: "Arch. Meera Pillai",
-    application: "Comfort AC",
+    application: "Hotel",
     location: "Mumbai",
-    systemType: "Chiller",
-    hp: 0, tr: 180,
+    systemType: "CHW",
+    capacity: 180, capacityUnit: "TR",
     valueLakhs: 42.0,
     status: "New Enquiry",
     expectedBookingDate: "2026-12-01",
@@ -365,13 +382,13 @@ export const leads: Lead[] = [
     id: "L010", srNo: 10,
     projectName: "Mahindra Auto Factory",
     salesEngineer: "Amit Kulkarni",
-    clientType: "Industrial",
-    enquirySource: "Exhibition",
+    clientType: "Corporate",
+    enquirySource: "Client",
     sourceName: "ACREX 2026",
-    application: "Industrial HVAC",
+    application: "Factory",
     location: "Nashik",
-    systemType: "AHU",
-    hp: 300, tr: 0,
+    systemType: "AHU with VRV",
+    capacity: 300, capacityUnit: "HP",
     valueLakhs: 31.0,
     status: "Site Visit",
     expectedBookingDate: "2026-10-30",
@@ -394,13 +411,13 @@ export const leads: Lead[] = [
     id: "L011", srNo: 11,
     projectName: "Sun Pharma Cleanroom HVAC",
     salesEngineer: "Suresh Pillai",
-    clientType: "Industrial",
-    enquirySource: "Direct",
+    clientType: "Corporate",
+    enquirySource: "Client",
     sourceName: "Mr. Dinesh Khanna",
-    application: "Pharma",
+    application: "Factory",
     location: "Vadodara",
-    systemType: "AHU",
-    hp: 180, tr: 0,
+    systemType: "AHU with DX",
+    capacity: 180, capacityUnit: "HP",
     valueLakhs: 55.0,
     status: "Won",
     expectedBookingDate: "2026-07-01",
@@ -424,13 +441,13 @@ export const leads: Lead[] = [
     id: "L012", srNo: 12,
     projectName: "Godrej Properties Office Complex",
     salesEngineer: "Rajan Mehta",
-    clientType: "Commercial",
+    clientType: "Builder / Developer",
     enquirySource: "Consultant",
     sourceName: "M/s Sterling Engineers",
-    application: "Comfort AC",
+    application: "Office",
     location: "Mumbai",
-    systemType: "VRF",
-    hp: 0, tr: 120,
+    systemType: "VRV",
+    capacity: 120, capacityUnit: "TR",
     valueLakhs: 24.0,
     status: "Lost",
     expectedBookingDate: "2026-07-30",
