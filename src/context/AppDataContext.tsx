@@ -1,9 +1,16 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { USERS, type User } from "../data/usersData";
 
-function stockPhoto(seed: string): string {
-  return `https://picsum.photos/seed/${seed}/600/400`;
-}
+// Real Star Airwell project photos (starairwell.com project gallery),
+// reused here since these are the company's own completed HVAC jobs.
+const REAL_PROJECT_PHOTOS = {
+  factory: "https://starairwell.com/wp-content/uploads/2026/06/image-4.webp", // Fabience Factory
+  dataCenter: "https://starairwell.com/wp-content/uploads/2026/06/pexels-brett-sayles-4597280.webp", // Amazon Data Center
+  corporate: "https://starairwell.com/wp-content/uploads/2026/06/image-2.webp", // Wells Fargo
+  industrial: "https://starairwell.com/wp-content/uploads/2026/06/image-5.webp", // Welspun Flooring
+  healthcare: "https://starairwell.com/wp-content/uploads/2026/06/image-3.webp", // Asian Spine Hospitals
+  residential: "https://starairwell.com/wp-content/uploads/2026/06/image-6.webp", // Honer Homes
+};
 
 export interface LeadDocument {
   id: string;
@@ -51,11 +58,12 @@ export interface ProjectUpdatePhoto {
 }
 
 const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
+  // L011 — Sun Pharma Cleanroom HVAC
   {
     id: "upd-demo-1",
     leadId: "L011",
     imageName: "site-mobilization.jpg",
-    previewUrl: stockPhoto("site-mobilization"),
+    previewUrl: REAL_PROJECT_PHOTOS.industrial,
     date: "2026-07-06",
     engineerName: "Kavya Sharma",
     caption: "Material delivered on site, cleanroom access secured. Team mobilized.",
@@ -64,7 +72,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-2",
     leadId: "L011",
     imageName: "ductwork-layout-marking.jpg",
-    previewUrl: stockPhoto("ductwork-layout-marking"),
+    previewUrl: REAL_PROJECT_PHOTOS.factory,
     date: "2026-07-09",
     engineerName: "Kavya Sharma",
     caption: "Layout marked for AHU ducting as per approved drawing.",
@@ -73,7 +81,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-3",
     leadId: "L011",
     imageName: "ahu-unit-positioning.jpg",
-    previewUrl: stockPhoto("ahu-unit-positioning"),
+    previewUrl: REAL_PROJECT_PHOTOS.factory,
     date: "2026-07-12",
     engineerName: "Nikhil Patil",
     caption: "AHU unit lifted and positioned on the mounting frame.",
@@ -82,7 +90,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-4",
     leadId: "L011",
     imageName: "ductwork-install-section-a.jpg",
-    previewUrl: stockPhoto("ductwork-install-section-a"),
+    previewUrl: REAL_PROJECT_PHOTOS.industrial,
     date: "2026-07-15",
     engineerName: "Kavya Sharma",
     caption: "Section A ducting installed and insulated.",
@@ -91,7 +99,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-5",
     leadId: "L011",
     imageName: "ductwork-install-section-b.jpg",
-    previewUrl: stockPhoto("ductwork-install-section-b"),
+    previewUrl: REAL_PROJECT_PHOTOS.industrial,
     date: "2026-07-15",
     engineerName: "Kavya Sharma",
     caption: "Section B ducting installed same day, ahead of schedule.",
@@ -100,7 +108,7 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-6",
     leadId: "L011",
     imageName: "electrical-control-panel.jpg",
-    previewUrl: stockPhoto("electrical-control-panel"),
+    previewUrl: REAL_PROJECT_PHOTOS.dataCenter,
     date: "2026-07-18",
     engineerName: "Nikhil Patil",
     caption: "Control panel wiring completed, ready for power-on.",
@@ -109,10 +117,67 @@ const DEMO_PROJECT_UPDATES: ProjectUpdatePhoto[] = [
     id: "upd-demo-7",
     leadId: "L011",
     imageName: "system-testing-commissioning.jpg",
-    previewUrl: stockPhoto("testing-commissioning"),
+    previewUrl: REAL_PROJECT_PHOTOS.dataCenter,
     date: "2026-07-22",
     engineerName: "Kavya Sharma",
     caption: "System powered on. Airflow and temperature readings within spec.",
+  },
+  // L003 — Tata Motors Assembly Line Cooling
+  {
+    id: "upd-demo-8",
+    leadId: "L003",
+    imageName: "ventilation-install-mobilization.jpg",
+    previewUrl: REAL_PROJECT_PHOTOS.factory,
+    date: "2026-08-28",
+    engineerName: "Nikhil Patil",
+    caption: "Ventilation ductwork mobilization at assembly line factory floor.",
+  },
+  {
+    id: "upd-demo-9",
+    leadId: "L003",
+    imageName: "extraction-fans-mounted.jpg",
+    previewUrl: REAL_PROJECT_PHOTOS.industrial,
+    date: "2026-09-02",
+    engineerName: "Kavya Sharma",
+    caption: "High-volume extraction fans mounted over assembly bay.",
+  },
+  // L005 — Cipla Pharma Cold Storage
+  {
+    id: "upd-demo-10",
+    leadId: "L005",
+    imageName: "coldroom-panel-fitting.jpg",
+    previewUrl: REAL_PROJECT_PHOTOS.healthcare,
+    date: "2026-08-20",
+    engineerName: "Kavya Sharma",
+    caption: "Insulated panel fitting for pharma cold storage room.",
+  },
+  {
+    id: "upd-demo-11",
+    leadId: "L005",
+    imageName: "dx-unit-installation.jpg",
+    previewUrl: REAL_PROJECT_PHOTOS.factory,
+    date: "2026-08-25",
+    engineerName: "Nikhil Patil",
+    caption: "DX condensing units installed and piped.",
+  },
+  // L008 — HDFC Bank Data Center
+  {
+    id: "upd-demo-12",
+    leadId: "L008",
+    imageName: "server-room-chw-piping.jpg",
+    previewUrl: REAL_PROJECT_PHOTOS.dataCenter,
+    date: "2026-09-05",
+    engineerName: "Kavya Sharma",
+    caption: "Chilled water piping routed to server room CRAC units.",
+  },
+  {
+    id: "upd-demo-13",
+    leadId: "L008",
+    imageName: "bms-integration.jpg",
+    previewUrl: REAL_PROJECT_PHOTOS.corporate,
+    date: "2026-09-09",
+    engineerName: "Nikhil Patil",
+    caption: "BMS integration and redundancy testing at the data center.",
   },
 ];
 
