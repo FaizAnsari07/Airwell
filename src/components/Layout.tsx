@@ -175,8 +175,8 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
           <img
             src={airwellLogo}
             alt="STAR Airwell"
-            className="h-16 w-auto rounded"
-            style={{ background: "white", padding: "6px 10px", borderRadius: 6 }}
+            className="h-16 w-auto"
+            style={{ filter: "brightness(0) invert(1)" }}
           />
           <div className="text-[10px] mt-2 font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>CRM Platform</div>
         </div>
