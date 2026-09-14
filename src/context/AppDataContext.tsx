@@ -241,6 +241,33 @@ const DEMO_TASKS: AppTask[] = [
   { id: "task-demo-5", title: "Prepare quotation revision for Raheja Mindspace", leadId: "L004", priority: "Low", dueDate: "2026-09-20", status: "To Do", assigneeId: "U005", assignedById: "U002", createdAt: "2026-09-12" },
 ];
 
+export type IssueStatus = "Open" | "Assigned" | "In Progress" | "Resolved";
+
+export interface AppIssue {
+  id: string;
+  leadId?: string;
+  category: string;
+  description: string;
+  priority: "High" | "Medium" | "Low";
+  status: IssueStatus;
+  ownerId: string;
+  dueDate: string;
+  reportedById: string;
+  createdAt: string;
+}
+
+// Field-reported issues — this is the same concept the mobile field app's
+// "Report Issue" (site work) and "Report an Issue" (client visits) actions
+// create, given a home here so the office side can actually see them
+// instead of these only existing on a phone. Seeded against the same real
+// leads/site engineers used in Project Updates and Tasks.
+const DEMO_ISSUES: AppIssue[] = [
+  { id: "issue-demo-1", leadId: "L008", category: "Civil Readiness", description: "Server room plinth not cured, blocking CRAC unit placement.", priority: "High", status: "Open", ownerId: "U008", dueDate: "2026-09-17", reportedById: "U008", createdAt: "2026-09-12" },
+  { id: "issue-demo-2", leadId: "L011", category: "Material Shortage", description: "Cleanroom-grade ducting insulation short by 40 m for Level 3.", priority: "High", status: "Assigned", ownerId: "U009", dueDate: "2026-09-15", reportedById: "U008", createdAt: "2026-09-10" },
+  { id: "issue-demo-3", leadId: "L005", category: "Access", description: "Cold storage chamber access delayed by client's ongoing racking work.", priority: "Medium", status: "In Progress", ownerId: "U008", dueDate: "2026-09-16", reportedById: "U006", createdAt: "2026-09-08" },
+  { id: "issue-demo-4", leadId: "L003", category: "Testing", description: "Extraction fan vibration reading above spec — rebalancing required.", priority: "Medium", status: "Resolved", ownerId: "U009", dueDate: "2026-09-05", reportedById: "U008", createdAt: "2026-09-02" },
+];
+
 interface AppDataContextValue {
   currentUser: User;
   setCurrentUserId: (id: string) => void;
@@ -277,6 +304,10 @@ interface AppDataContextValue {
   tasks: AppTask[];
   addTask: (task: Omit<AppTask, "id" | "createdAt">) => void;
   updateTaskStatus: (id: string, status: TaskStatus) => void;
+
+  issues: AppIssue[];
+  addIssue: (issue: Omit<AppIssue, "id" | "createdAt">) => void;
+  updateIssueStatus: (id: string, status: IssueStatus) => void;
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -295,6 +326,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [projectUpdates, setProjectUpdates] = useState<ProjectUpdatePhoto[]>(DEMO_PROJECT_UPDATES);
   const [statusChangeLogs, setStatusChangeLogs] = useState<StatusChangeLog[]>([]);
   const [tasks, setTasks] = useState<AppTask[]>(DEMO_TASKS);
+  const [issues, setIssues] = useState<AppIssue[]>(DEMO_ISSUES);
   const [customLeadOptions, setCustomLeadOptions] = useState<Record<LeadOptionField, string[]>>({
     clientType: [],
     enquirySource: [],
@@ -358,6 +390,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
   }
 
+  function addIssue(issue: Omit<AppIssue, "id" | "createdAt">) {
+    setIssues((prev) => [
+      { ...issue, id: generateId("issue"), createdAt: new Date().toISOString().slice(0, 10) },
+      ...prev,
+    ]);
+  }
+
+  function updateIssueStatus(id: string, status: IssueStatus) {
+    setIssues((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
+  }
+
   const value: AppDataContextValue = {
     currentUser,
     setCurrentUserId,
@@ -387,6 +430,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     tasks,
     addTask,
     updateTaskStatus,
+    issues,
+    addIssue,
+    updateIssueStatus,
   };
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
