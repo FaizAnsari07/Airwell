@@ -5,7 +5,7 @@ import { formatDate } from "../utils/formatDate";
 
 export type NavPage =
   | "dashboard" | "leads" | "pipeline" | "projects" | "followups"
-  | "sales-performance" | "monthly-review" | "employee-tracking"
+  | "sales-performance" | "monthly-review" | "employee-tracking" | "tasks"
   | "user-management" | "access-management"
   | "reports" | "settings";
 
@@ -27,6 +27,14 @@ function ShieldIcon() {
   return (
     <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  );
+}
+function TasksIcon_() {
+  return (
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>
+      <path d="m8 15 2 2 5-5"/>
     </svg>
   );
 }
@@ -128,6 +136,7 @@ const NAV_SECTIONS = [
     label: "Field",
     items: [
       { id: "employee-tracking", icon: <LocationIcon_ />, label: "Employee Tracking", badge: 5 },
+      { id: "tasks",             icon: <TasksIcon_ />,     label: "Tasks" },
     ],
   },
   {

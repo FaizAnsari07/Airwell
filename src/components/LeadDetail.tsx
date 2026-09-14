@@ -11,6 +11,77 @@ import FileUploadButton from "./shared/FileUploadButton";
 import { formatDate } from "../utils/formatDate";
 import { formatRupees, lakhsToRupees } from "../utils/formatCurrency";
 
+function csvCell(value: string): string {
+  if (/[",\r\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+  return value;
+}
+
+function monthLabel(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "Unknown";
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+function exportProjectReport(lead: Lead, updates: ProjectUpdatePhoto[], payments: Payment[]) {
+  const rows: string[][] = [];
+
+  rows.push(["Project Report", lead.projectName]);
+  rows.push(["Client", lead.clientName]);
+  rows.push(["Sales Engineer", lead.salesEngineer]);
+  rows.push(["Status", lead.status]);
+  rows.push(["Value (₹ Lakhs)", String(lead.valueLakhs)]);
+  rows.push(["System", `${lead.systemType} · ${lead.capacity}${lead.capacityUnit}`]);
+  rows.push(["Location", lead.location]);
+  rows.push([]);
+
+  const monthKeys = new Set<string>();
+  for (const u of updates) monthKeys.add(monthLabel(u.date));
+  for (const p of payments) monthKeys.add(monthLabel(p.date));
+  const sortedMonths = [...monthKeys].sort(
+    (a, b) => new Date(`01 ${a}`).getTime() - new Date(`01 ${b}`).getTime()
+  );
+
+  rows.push(["Monthly Summary — Year to Date"]);
+  rows.push(["Month", "Site Updates Logged", "Photos Uploaded", "Payments Received (₹L)"]);
+  for (const month of sortedMonths) {
+    const monthUpdates = updates.filter((u) => monthLabel(u.date) === month);
+    const monthPayments = payments.filter((p) => monthLabel(p.date) === month);
+    rows.push([
+      month,
+      String(monthUpdates.length),
+      String(monthUpdates.length),
+      monthPayments.reduce((s, p) => s + p.amount, 0).toFixed(2),
+    ]);
+  }
+  rows.push([]);
+
+  rows.push(["Daily Work Log"]);
+  rows.push(["Date", "Engineer", "Update", "Photo"]);
+  const sortedUpdates = [...updates].sort((a, b) => (a.date < b.date ? -1 : 1));
+  for (const u of sortedUpdates) {
+    rows.push([formatDate(u.date), u.engineerName, u.caption ?? "", u.imageName]);
+  }
+
+  if (payments.length > 0) {
+    rows.push([]);
+    rows.push(["Payment Ledger"]);
+    rows.push(["Date", "Method", "Amount (₹L)", "Note"]);
+    const sortedPayments = [...payments].sort((a, b) => (a.date < b.date ? -1 : 1));
+    for (const p of sortedPayments) {
+      rows.push([formatDate(p.date), p.method, String(p.amount), p.note ?? ""]);
+    }
+  }
+
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${lead.projectName.replace(/[^a-z0-9]+/gi, "-")}_report.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack: () => void }) {
   const {
     currentUser, paidTotalForLead, paymentsForLead, documentsForLead, addNotification,
@@ -218,6 +289,12 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
           ))}
 
           <div className="ml-auto flex items-center gap-2 pb-1">
+            <button
+              onClick={() => exportProjectReport(lead, updates, payments)}
+              className="text-xs font-semibold text-slate-600 px-3 py-1 rounded border border-slate-200 hover:bg-slate-50"
+            >
+              📊 Export Report
+            </button>
             {lead.status !== "Won" && (
               <button
                 onClick={() => setShowWonModal(true)}

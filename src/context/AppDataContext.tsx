@@ -217,6 +217,30 @@ export interface StatusChangeLog {
 
 export type LeadOptionField = "clientType" | "enquirySource" | "application" | "systemType" | "salesEngineer";
 
+export type TaskStatus = "To Do" | "In Progress" | "Blocked" | "Completed";
+
+export interface AppTask {
+  id: string;
+  title: string;
+  leadId?: string;
+  priority: "High" | "Medium" | "Low";
+  dueDate: string;
+  status: TaskStatus;
+  assigneeId: string;
+  assignedById: string;
+  createdAt: string;
+}
+
+// Seeded against real leads/users so Tasks reads as connected data, not a
+// disconnected demo list — same principle as Payments/Project Updates.
+const DEMO_TASKS: AppTask[] = [
+  { id: "task-demo-1", title: "Finalize CHW piping layout for server room", leadId: "L008", priority: "High", dueDate: "2026-09-16", status: "In Progress", assigneeId: "U003", assignedById: "U002", createdAt: "2026-09-10" },
+  { id: "task-demo-2", title: "Site measurement for AHU room — Level 3", leadId: "L011", priority: "Medium", dueDate: "2026-09-18", status: "To Do", assigneeId: "U006", assignedById: "U002", createdAt: "2026-09-11" },
+  { id: "task-demo-3", title: "Follow up on cold storage panel delivery", leadId: "L005", priority: "High", dueDate: "2026-09-14", status: "Blocked", assigneeId: "U006", assignedById: "U002", createdAt: "2026-09-09" },
+  { id: "task-demo-4", title: "Submit test & balance report — Tata Motors", leadId: "L003", priority: "Medium", dueDate: "2026-09-08", status: "Completed", assigneeId: "U006", assignedById: "U002", createdAt: "2026-09-01" },
+  { id: "task-demo-5", title: "Prepare quotation revision for Raheja Mindspace", leadId: "L004", priority: "Low", dueDate: "2026-09-20", status: "To Do", assigneeId: "U005", assignedById: "U002", createdAt: "2026-09-12" },
+];
+
 interface AppDataContextValue {
   currentUser: User;
   setCurrentUserId: (id: string) => void;
@@ -249,6 +273,10 @@ interface AppDataContextValue {
   statusChangeLogs: StatusChangeLog[];
   addStatusChangeLog: (log: Omit<StatusChangeLog, "id">) => void;
   statusChangeLogsForLead: (leadId: string) => StatusChangeLog[];
+
+  tasks: AppTask[];
+  addTask: (task: Omit<AppTask, "id" | "createdAt">) => void;
+  updateTaskStatus: (id: string, status: TaskStatus) => void;
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -266,6 +294,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [assignments, setAssignments] = useState<ProjectAssignment[]>([]);
   const [projectUpdates, setProjectUpdates] = useState<ProjectUpdatePhoto[]>(DEMO_PROJECT_UPDATES);
   const [statusChangeLogs, setStatusChangeLogs] = useState<StatusChangeLog[]>([]);
+  const [tasks, setTasks] = useState<AppTask[]>(DEMO_TASKS);
   const [customLeadOptions, setCustomLeadOptions] = useState<Record<LeadOptionField, string[]>>({
     clientType: [],
     enquirySource: [],
@@ -318,6 +347,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setStatusChangeLogs((prev) => [...prev, { ...log, id: generateId("log") }]);
   }
 
+  function addTask(task: Omit<AppTask, "id" | "createdAt">) {
+    setTasks((prev) => [
+      { ...task, id: generateId("task"), createdAt: new Date().toISOString().slice(0, 10) },
+      ...prev,
+    ]);
+  }
+
+  function updateTaskStatus(id: string, status: TaskStatus) {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+  }
+
   const value: AppDataContextValue = {
     currentUser,
     setCurrentUserId,
@@ -344,6 +384,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     statusChangeLogs,
     addStatusChangeLog,
     statusChangeLogsForLead: (leadId) => statusChangeLogs.filter((l) => l.leadId === leadId),
+    tasks,
+    addTask,
+    updateTaskStatus,
   };
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

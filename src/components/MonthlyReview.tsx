@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { monthlyData, leads, salesEngineers, MONTHLY_LABELS } from "../data/crmData";
+import { monthlyData, leads, MONTHLY_LABELS } from "../data/crmData";
+import type { Lead } from "../data/crmData";
+import { useAppData } from "../context/AppDataContext";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -8,25 +10,47 @@ import { formatDate } from "../utils/formatDate";
 
 type Section = "booking-forecast" | "collection-forecast" | "booking-data" | "billing-progress" | "enquiry-gen";
 
-const BOOKING_ROWS = [
-  { project: "Bharat Forge Plant Expansion", se: "Rajan Mehta", forecastHP: 0, forecastTR: 200, forecastAmt: 48.5, achievedAmt: 0, remarks: "Negotiation ongoing" },
-  { project: "Tata Motors Assembly Line", se: "Amit Kulkarni", forecastHP: 500, forecastTR: 0, forecastAmt: 35.0, achievedAmt: 35.0, remarks: "Booking confirmed" },
-  { project: "HDFC Bank Data Center", se: "Suresh Pillai", forecastHP: 0, forecastTR: 250, forecastAmt: 65.0, achievedAmt: 0, remarks: "Price negotiation" },
-  { project: "Infosys Campus VRF", se: "Deepak Verma", forecastHP: 0, forecastTR: 150, forecastAmt: 28.0, achievedAmt: 0, remarks: "Budget approval pending" },
-  { project: "Apollo Hospitals HVAC", se: "Priya Desai", forecastHP: 0, forecastTR: 300, forecastAmt: 72.0, achievedAmt: 0, remarks: "Quotation submitted" },
-];
+interface BookingRow {
+  lead: Lead;
+  forecastHP: number;
+  forecastTR: number;
+  forecastAmt: number;
+  achievedAmt: number;
+}
 
-const COLLECTION_ROWS = [
-  { project: "Sun Pharma Cleanroom HVAC", se: "Suresh Pillai", forecast: 16.5, achieved: 16.5, status: "Achieved" },
-  { project: "Cipla Pharma Cold Storage", se: "Suresh Pillai", forecast: 5.55, achieved: 5.55, status: "Achieved" },
-  { project: "Tata Motors Assembly Line", se: "Amit Kulkarni", forecast: 10.5, achieved: 0, status: "Pending" },
-  { project: "Bharat Forge Plant Expansion", se: "Rajan Mehta", forecast: 14.55, achieved: 0, status: "At Risk" },
-  { project: "HDFC Bank Data Center", se: "Suresh Pillai", forecast: 19.5, achieved: 0, status: "Pending" },
-];
+interface CollectionRow {
+  lead: Lead;
+  forecast: number;
+  achieved: number;
+  status: "Achieved" | "Pending" | "At Risk";
+}
 
-export default function MonthlyReview() {
+export default function MonthlyReview({ onLeadClick }: { onLeadClick: (id: string) => void }) {
+  const { paidTotalForLead } = useAppData();
   const [selectedMonth, setSelectedMonth] = useState(4); // Aug 2026 = index 4
   const [section, setSection] = useState<Section>("booking-forecast");
+
+  const BOOKING_ROWS: BookingRow[] = leads
+    .filter((l) => l.status !== "Lost")
+    .map((l) => ({
+      lead: l,
+      forecastHP: l.capacityUnit === "HP" ? l.capacity : 0,
+      forecastTR: l.capacityUnit === "TR" ? l.capacity : 0,
+      forecastAmt: l.valueLakhs,
+      achievedAmt: l.status === "Won" || l.status === "Booking Confirmed" || l.status === "Advance Received" ? l.valueLakhs : 0,
+    }));
+
+  const COLLECTION_ROWS: CollectionRow[] = leads
+    .filter((l) => l.status === "Won")
+    .map((l) => {
+      const achieved = paidTotalForLead(l.id);
+      return {
+        lead: l,
+        forecast: l.valueLakhs,
+        achieved,
+        status: achieved >= l.valueLakhs ? "Achieved" : achieved > 0 ? "Pending" : "At Risk",
+      };
+    });
 
   const m = monthlyData[selectedMonth];
   const bookingPct = m.bookingAchieved > 0 ? Math.round((m.bookingAchieved / m.bookingForecast) * 100) : 0;
@@ -125,13 +149,13 @@ export default function MonthlyReview() {
       {/* Section Content */}
       <div className="flex-1 overflow-y-auto p-5">
         {section === "booking-forecast" && (
-          <BookingForecast rows={BOOKING_ROWS} />
+          <BookingForecast rows={BOOKING_ROWS} onLeadClick={onLeadClick} />
         )}
         {section === "collection-forecast" && (
-          <CollectionForecast rows={COLLECTION_ROWS} />
+          <CollectionForecast rows={COLLECTION_ROWS} onLeadClick={onLeadClick} />
         )}
         {section === "booking-data" && (
-          <BookingData monthLabel={MONTHLY_LABELS[selectedMonth]} />
+          <BookingData monthLabel={MONTHLY_LABELS[selectedMonth]} onLeadClick={onLeadClick} />
         )}
         {section === "billing-progress" && (
           <BillingProgress data={monthlyData.slice(0, selectedMonth + 1)} />
@@ -144,7 +168,7 @@ export default function MonthlyReview() {
   );
 }
 
-function BookingForecast({ rows }: { rows: typeof BOOKING_ROWS }) {
+function BookingForecast({ rows, onLeadClick }: { rows: BookingRow[]; onLeadClick: (id: string) => void }) {
   const totalForecast = rows.reduce((s, r) => s + r.forecastAmt, 0);
   const totalAchieved = rows.reduce((s, r) => s + r.achievedAmt, 0);
 
@@ -174,9 +198,13 @@ function BookingForecast({ rows }: { rows: typeof BOOKING_ROWS }) {
               const variance = r.achievedAmt - r.forecastAmt;
               const achPct = r.achievedAmt > 0 ? Math.round((r.achievedAmt / r.forecastAmt) * 100) : 0;
               return (
-                <tr key={r.project} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{r.project}</td>
-                  <td className="px-4 py-3 text-slate-600">{r.se}</td>
+                <tr key={r.lead.id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 font-medium">
+                    <button onClick={() => onLeadClick(r.lead.id)} className="text-slate-900 hover:text-blue-700 hover:underline text-left">
+                      {r.lead.projectName}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">{r.lead.salesEngineer}</td>
                   <td className="px-4 py-3 text-right font-mono text-slate-600">
                     {r.forecastHP > 0 ? `${r.forecastHP}HP` : `${r.forecastTR}TR`}
                   </td>
@@ -192,7 +220,7 @@ function BookingForecast({ rows }: { rows: typeof BOOKING_ROWS }) {
                       <span className={`font-mono font-semibold ${achPct >= 100 ? "text-green-600" : "text-amber-600"}`}>{achPct}%</span>
                     ) : <span className="text-slate-300">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-slate-500">{r.remarks}</td>
+                  <td className="px-4 py-3 text-slate-500">{r.lead.remarks || r.lead.status}</td>
                 </tr>
               );
             })}
@@ -215,7 +243,7 @@ function BookingForecast({ rows }: { rows: typeof BOOKING_ROWS }) {
   );
 }
 
-function CollectionForecast({ rows }: { rows: typeof COLLECTION_ROWS }) {
+function CollectionForecast({ rows, onLeadClick }: { rows: CollectionRow[]; onLeadClick: (id: string) => void }) {
   const totalForecast = rows.reduce((s, r) => s + r.forecast, 0);
   const totalAchieved = rows.reduce((s, r) => s + r.achieved, 0);
 
@@ -244,9 +272,13 @@ function CollectionForecast({ rows }: { rows: typeof COLLECTION_ROWS }) {
               const statusColor = r.status === "Achieved" ? "text-green-700 bg-green-50" :
                 r.status === "At Risk" ? "text-red-700 bg-red-50" : "text-amber-700 bg-amber-50";
               return (
-                <tr key={r.project} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{r.project}</td>
-                  <td className="px-4 py-3 text-slate-600">{r.se}</td>
+                <tr key={r.lead.id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 font-medium">
+                    <button onClick={() => onLeadClick(r.lead.id)} className="text-slate-900 hover:text-blue-700 hover:underline text-left">
+                      {r.lead.projectName}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">{r.lead.salesEngineer}</td>
                   <td className="px-4 py-3 text-right font-mono">₹{r.forecast.toFixed(2)}L</td>
                   <td className="px-4 py-3 text-right font-mono font-semibold text-green-700">
                     {r.achieved > 0 ? `₹${r.achieved.toFixed(2)}L` : "—"}
@@ -267,7 +299,7 @@ function CollectionForecast({ rows }: { rows: typeof COLLECTION_ROWS }) {
   );
 }
 
-function BookingData({ monthLabel }: { monthLabel: string }) {
+function BookingData({ monthLabel, onLeadClick }: { monthLabel: string; onLeadClick: (id: string) => void }) {
   const won = leads.filter(l => l.status === "Won" || l.status === "Booking Confirmed" || l.status === "Advance Received");
   return (
     <div>
@@ -284,7 +316,11 @@ function BookingData({ monthLabel }: { monthLabel: string }) {
           <tbody className="divide-y divide-slate-100">
             {won.map((l) => (
               <tr key={l.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-900">{l.projectName}</td>
+                <td className="px-4 py-3 font-medium">
+                  <button onClick={() => onLeadClick(l.id)} className="text-slate-900 hover:text-blue-700 hover:underline text-left">
+                    {l.projectName}
+                  </button>
+                </td>
                 <td className="px-4 py-3 text-slate-600">{l.clientName}</td>
                 <td className="px-4 py-3 text-slate-600">{l.salesEngineer}</td>
                 <td className="px-4 py-3 text-slate-500">{l.systemType}</td>

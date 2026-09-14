@@ -10,6 +10,7 @@ import FollowUps from "./components/FollowUps";
 import SalesPerformance from "./components/SalesPerformance";
 import ProjectDirectory from "./components/ProjectDirectory";
 import EmployeeTracking from "./components/EmployeeTracking";
+import Tasks from "./components/Tasks";
 import UserManagement from "./components/UserManagement";
 import AccessManagement from "./components/AccessManagement";
 
@@ -53,11 +54,14 @@ export default function App() {
       {page === "employee-tracking" && (
         <EmployeeTracking onLeadClick={openLead} />
       )}
+      {page === "tasks" && (
+        <Tasks onLeadClick={openLead} />
+      )}
       {page === "sales-performance" && (
         <SalesPerformance />
       )}
       {page === "monthly-review" && (
-        <MonthlyReview />
+        <MonthlyReview onLeadClick={openLead} />
       )}
       {page === "user-management" && <UserManagement />}
       {page === "access-management" && <AccessManagement />}
