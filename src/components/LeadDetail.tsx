@@ -356,7 +356,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                         by: currentUser.name,
                       };
                       updateLead({ activities: [...lead.activities, activity], lastActivity: activity.date });
-                      addNotification(`New ${activityType.toLowerCase()} logged on ${lead.projectName}: ${noteText}`);
+                      addNotification(`New ${activityType.toLowerCase()} logged on ${lead.projectName}: ${noteText}`, undefined, lead.id);
                       setNoteText("");
                     }}
                     disabled={!noteText.trim()}
@@ -457,8 +457,8 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                   currentUserRole={currentUser.role}
                   onAssign={(managerId, staffIds) => {
                     assignProject(lead.id, managerId, staffIds);
-                    addNotification(`You've been assigned to ${lead.projectName}`, managerId);
-                    staffIds?.forEach((id) => addNotification(`You've been assigned to ${lead.projectName}`, id));
+                    addNotification(`You've been assigned to ${lead.projectName}`, managerId, lead.id);
+                    staffIds?.forEach((id) => addNotification(`You've been assigned to ${lead.projectName}`, id, lead.id));
                   }}
                 />
               )}
@@ -561,7 +561,7 @@ export default function LeadDetail({ leadId, onBack }: { leadId: string; onBack:
                 onClick={() => {
                   if (!followUpDate) return;
                   updateLead({ nextFollowUp: followUpDate });
-                  addNotification(`Follow-up (${followUpType}) scheduled on ${lead.projectName} for ${followUpDate}${followUpNote ? ": " + followUpNote : ""}`);
+                  addNotification(`Follow-up (${followUpType}) scheduled on ${lead.projectName} for ${followUpDate}${followUpNote ? ": " + followUpNote : ""}`, undefined, lead.id);
                   setShowFollowUpModal(false);
                   setFollowUpDate("");
                   setFollowUpNote("");

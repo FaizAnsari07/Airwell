@@ -31,7 +31,8 @@ export default function WonModal({
     if (superAdmin) {
       addNotification(
         `${lead.projectName} was marked Won (₹${value}L) — assign it to a manager.`,
-        superAdmin.id
+        superAdmin.id,
+        lead.id
       );
     }
     onConfirm(value, startDate, endDate);

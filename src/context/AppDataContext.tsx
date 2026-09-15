@@ -61,6 +61,7 @@ export interface AppNotification {
   date: string;
   read: boolean;
   forUserId?: string;
+  leadId?: string;
 }
 
 export interface ProjectAssignment {
@@ -285,8 +286,9 @@ interface AppDataContextValue {
   paidTotalForLead: (leadId: string) => number;
 
   notifications: AppNotification[];
-  addNotification: (message: string, forUserId?: string) => void;
+  addNotification: (message: string, forUserId?: string, leadId?: string) => void;
   markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
   notificationsForCurrentUser: () => AppNotification[];
 
   assignments: ProjectAssignment[];
@@ -353,15 +355,23 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setPayments((prev) => [...prev, { ...payment, id: generateId("pay") }]);
   }
 
-  function addNotification(message: string, forUserId?: string) {
+  function addNotification(message: string, forUserId?: string, leadId?: string) {
     setNotifications((prev) => [
-      { id: generateId("notif"), message, date: new Date().toISOString().slice(0, 16).replace("T", " "), read: false, forUserId },
+      { id: generateId("notif"), message, date: new Date().toISOString().slice(0, 16).replace("T", " "), read: false, forUserId, leadId },
       ...prev,
     ]);
   }
 
   function markNotificationRead(id: string) {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  }
+
+  function markAllNotificationsRead() {
+    setNotifications((prev) =>
+      prev.map((n) =>
+        !n.forUserId || n.forUserId === currentUser.id ? { ...n, read: true } : n
+      )
+    );
   }
 
   function assignProject(leadId: string, managerId: string, staffIds?: string[]) {
@@ -416,6 +426,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     notifications,
     addNotification,
     markNotificationRead,
+    markAllNotificationsRead,
     notificationsForCurrentUser: () =>
       notifications.filter((n) => !n.forUserId || n.forUserId === currentUser.id),
     assignments,

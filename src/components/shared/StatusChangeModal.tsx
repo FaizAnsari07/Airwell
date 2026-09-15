@@ -37,7 +37,7 @@ export default function StatusChangeModal({
       changedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
       changedBy: currentUser.name,
     });
-    addNotification(`${lead.projectName} moved from ${lead.status} to ${targetStatus}`);
+    addNotification(`${lead.projectName} moved from ${lead.status} to ${targetStatus}`, undefined, lead.id);
     onConfirm(targetStatus);
   }
 

@@ -12,6 +12,7 @@ import ProjectDirectory from "./components/ProjectDirectory";
 import EmployeeTracking from "./components/EmployeeTracking";
 import Tasks from "./components/Tasks";
 import Issues from "./components/Issues";
+import Notifications from "./components/Notifications";
 import UserManagement from "./components/UserManagement";
 import AccessManagement from "./components/AccessManagement";
 
@@ -60,6 +61,9 @@ export default function App() {
       )}
       {page === "issues" && (
         <Issues onLeadClick={openLead} />
+      )}
+      {page === "notifications" && (
+        <Notifications onLeadClick={openLead} />
       )}
       {page === "sales-performance" && (
         <SalesPerformance />

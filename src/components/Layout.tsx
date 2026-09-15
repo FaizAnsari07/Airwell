@@ -4,7 +4,7 @@ import { useAppData } from "../context/AppDataContext";
 import { formatDate } from "../utils/formatDate";
 
 export type NavPage =
-  | "dashboard" | "leads" | "pipeline" | "projects" | "followups"
+  | "dashboard" | "notifications" | "leads" | "pipeline" | "projects" | "followups"
   | "sales-performance" | "monthly-review" | "employee-tracking" | "tasks" | "issues"
   | "user-management" | "access-management"
   | "reports" | "settings";
@@ -129,6 +129,7 @@ const NAV_SECTIONS = [
     label: "Overview",
     items: [
       { id: "dashboard", icon: <GridIcon_ />, label: "Dashboard" },
+      { id: "notifications", icon: <BellIcon className="w-3.5 h-3.5" />, label: "Notifications" },
     ],
   },
   {
@@ -199,6 +200,9 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
               </div>
               {section.items.map((item) => {
                 const active = activePage === item.id;
+                const badge = item.id === "notifications"
+                  ? (unreadCount > 0 ? unreadCount : undefined)
+                  : ("badge" in item ? item.badge : undefined);
                 return (
                   <button
                     key={item.id}
@@ -215,9 +219,9 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
                       {item.icon}
                     </span>
                     <span className="flex-1 text-left">{item.label}</span>
-                    {"badge" in item && item.badge ? (
+                    {badge ? (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#39B849", color: "#fff" }}>
-                        {item.badge}
+                        {badge}
                       </span>
                     ) : null}
                   </button>
@@ -289,7 +293,7 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
                 {notifications.length === 0 && (
                   <div className="px-3 py-6 text-center text-xs text-slate-400">No notifications yet</div>
                 )}
-                {notifications.map((n) => (
+                {notifications.slice(0, 6).map((n) => (
                   <button
                     key={n.id}
                     onClick={() => markNotificationRead(n.id)}
@@ -299,6 +303,15 @@ export default function Layout({ children, activePage, onNavigate }: LayoutProps
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">{formatDate(n.date)}</div>
                   </button>
                 ))}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={() => { setNotifOpen(false); onNavigate("notifications"); }}
+                    className="w-full text-center px-3 py-2 text-[11px] font-semibold hover:bg-slate-50"
+                    style={{ color: "#253580" }}
+                  >
+                    View all notifications
+                  </button>
+                )}
               </div>
             )}
           </div>
